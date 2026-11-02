@@ -3,7 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Get the Cheese</title>
+<title>Move That Mouse</title>
+<meta name="apple-mobile-web-app-title" content="Move That Mouse">
+<meta name="application-name" content="Move That Mouse">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <style>
   html, body { margin: 0; min-height: 100%; background: #CECCBF; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; touch-action: manipulation; -webkit-user-select: none; user-select: none; }
   [hidden] { display: none !important; }
@@ -105,10 +108,73 @@
     #panel { align-self: center; }
     #board { min-height: 0; }
   }
+
+  /* v0.6 title screen (LANDING_v1.md; CSS/JS drafted on Venice qwen3-coder, fitted by hand) */
+  #home { position: fixed; inset: 0; z-index: 20; background: #E9E5D8; box-sizing: border-box; height: 100vh; height: 100dvh; overflow: hidden;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    display: grid; grid-template-rows: 55% 1fr; grid-template-columns: 100%; opacity: 1; transition: opacity .3s; }
+  #home.fade { opacity: 0; }
+  #hero { position: relative; min-height: 0; min-width: 0; overflow: hidden; }
+  #hero canvas { display: block; width: 100%; height: 100%; }
+  #home-col { min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; padding: 4px 12px 8px; box-sizing: border-box; }
+  #home-title { font-family: inherit; font-weight: 800; color: #202B50; text-align: center; margin: 0; font-size: 40px; line-height: 1.08; }
+  .swoosh { display: inline-block; border-bottom: 4px solid #FFD23F; border-radius: 0 0 50% 50% / 0 0 100% 100%; padding-bottom: 2px; }
+  #home-ctl, #home-picker { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  #home-play { background: #3fae4a; width: 220px; height: 72px; min-height: 64px; color: #fff; font: inherit; font-size: 28px; font-weight: 700; border: none; border-radius: 16px; box-shadow: 0 4px 0 #202B50; animation: homePulse 1.6s ease-in-out infinite; cursor: pointer; touch-action: manipulation; }
+  @keyframes homePulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+  #home-level { color: #202B50; font-size: 18px; font-weight: 600; margin-top: -2px; }
+  #home-levels { background: #E9E5D8; min-width: 220px; height: 64px; border: 3px solid #202B50; color: #202B50; font: inherit; font-size: 22px; font-weight: 700; border-radius: 16px; cursor: pointer; touch-action: manipulation; }
+  #home-dots { display: grid; grid-template-columns: repeat(10, 32px); gap: 4px; }
+  .hdot { width: 32px; height: 32px; border-radius: 50%; border: 2px solid #202B50; background: #fff; color: #202B50; font: inherit; font-size: 14px; font-weight: 700; padding: 0; cursor: pointer; touch-action: manipulation; }
+  .hdot.done { background: #dfe9b8; }
+  .hdot.current { background: #FFD23F; }
+  #home-picker-back { background: none; border: none; color: #202B50; font: inherit; font-size: 18px; font-weight: 700; min-height: 44px; min-width: 120px; cursor: pointer; }
+  #home-foot { color: #6B6B6B; font-size: 14px; text-align: center; }
+  #home .br { display: inline; }
+  @media (min-width: 700px) and (min-height: 700px) { #home-title { font-size: 56px; } #home-col { justify-content: space-evenly; } }
+  @media (orientation: landscape) {
+    #home { grid-template-rows: 100%; grid-template-columns: 55% 45%; }
+  }
+  @media (orientation: landscape) and (min-width: 900px) { #home .br { display: none; } #home-title { white-space: nowrap; font-size: min(56px, 4.6vw); } }
+  @media (orientation: landscape) and (max-height: 500px) { #home-dots { grid-template-columns: repeat(5, 34px); } .hdot { width: 34px; height: 34px; } #home-ctl, #home-picker { gap: 4px; } #home-picker-back { min-height: 36px; } #home-title { font-size: 34px; } }
+  @media (min-width: 700px) and (min-height: 700px) { #home-dots { grid-template-columns: repeat(5, 48px); gap: 8px; } .hdot { width: 48px; height: 48px; font-size: 18px; border-width: 3px; } }
+  /* v0.6.1 (LANDING v1.1): home button 44pt target, 16pt from the top-left safe area; title row is 44pt tall beside it */
+  #home-btn { position: absolute; left: calc(env(safe-area-inset-left, 0px) + 16px); top: calc(env(safe-area-inset-top, 0px) + 16px); width: 44px; height: 44px; border: none; border-radius: 12px; background: #E9E5D8; color: #202B50; font-size: 26px; line-height: 44px; padding: 0; cursor: pointer; z-index: 5; }
+  #app { padding-top: calc(env(safe-area-inset-top, 0px) + 16px); }
+  #title { min-height: 44px; line-height: 44px; padding: 0 64px; box-sizing: border-box; max-width: 100%; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* title column: title + buttons centred on the board's middle line, footer at the bottom; title sized by fitHomeTitle() */
+  #home-col { position: relative; justify-content: center; gap: 14px; padding-left: 24px; padding-right: 24px; }
+  #home-foot { position: absolute; left: 0; right: 0; bottom: 8px; }
+  @media (orientation: portrait) and (max-height: 700px) {   /* v0.6.1: win back the 44pt title row on short phones (390x664) */
+    #app { gap: 3px; padding-bottom: max(4px, env(safe-area-inset-bottom)); }
+    #levels { grid-template-columns: repeat(10, 30px); gap: 3px; }
+    .dot { width: 30px; height: 30px; font-size: 13px; }
+    main { gap: 3px; }
+    #panel { gap: 4px; }
+    #buttons { gap: 4px; }
+  }
+  @media (orientation: portrait) { #home-col { justify-content: space-evenly; gap: 0; } #home-foot { position: static; } }
 </style>
 </head>
 <body>
+<div id="home">
+  <div id="hero" aria-hidden="true"></div>
+  <div id="home-col">
+    <h1 id="home-title">Move That<br class="br"> <span class="swoosh">Mouse</span></h1>
+    <div id="home-ctl">
+      <button id="home-play" aria-label="Play">Play &#9654;</button>
+      <div id="home-level">Level 1</div>
+      <button id="home-levels">Levels</button>
+    </div>
+    <div id="home-picker" hidden>
+      <div id="home-dots"></div>
+      <button id="home-picker-back">Back</button>
+    </div>
+    <div id="home-foot">Program the mouse, find the cheese.</div>
+  </div>
+</div>
 <div id="app">
+  <button id="home-btn" aria-label="Title screen">&#8962;</button>
   <div id="title"></div>
   <div id="levels"></div>
   <main>
@@ -317,6 +383,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     floor.position.y = -0.07;
     floor.receiveShadow = false;
     scene.add(floor);
+    state.floor = floor;
     state.meshCount++;
 
     // Lights
@@ -1319,7 +1386,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     var THREE = window.THREE;
     var n = boardN();
     cam.aspect = w / h;
-    var pitch = 50 * Math.PI / 180, yaw = 30 * Math.PI / 180;
+    var pitch = 50 * Math.PI / 180, yaw = 30 * Math.PI / 180 + (state.yawExtra || 0); // v0.6: title screen spins the board
     var maxH = state.maxH || 0;
     var target = new THREE.Vector3(0, FLOOR_Y + maxH / 2, 0);
     var land = window.innerWidth > window.innerHeight;
@@ -1519,7 +1586,10 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     }
     try {
       if (state.levelBuilt !== s.level) rebuildLevel(s.level);
+      var bg = s.bg || 0xf4f1e8; if (state.bgNow !== bg) { state.scene.background = new window.THREE.Color(bg); state.bgNow = bg; if (state.floor) state.floor.visible = !s.bg; }
+      if ((s.spin || 0) !== (state.yawExtra || 0)) { state.yawExtra = s.spin || 0; fitCamera(); }
       updateMouse(s.view, now, s.celebrate, s.level, dt);
+      if (s.hopY) state.mouse.root.position.y += s.hopY;
       animateSparkles(s.celebrate, now);
       state.renderer.render(state.scene, state.camera);
     } catch (e) {
@@ -1553,6 +1623,13 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         try { new ResizeObserver(onResize).observe(containerEl); } catch (e) {}
       }
       requestAnimationFrame(frame);
+    },
+    // v0.6: move the one canvas between the title-screen hero and the game board
+    attach: function (el) {
+      if (!el || !state.canvas || state.container === el) return;
+      state.container = el; el.appendChild(state.canvas);
+      if (typeof ResizeObserver !== 'undefined') { try { new ResizeObserver(onResize).observe(el); } catch (e) {} }
+      sizeCanvas();
     },
     _dbg: function () { return state; },
     info: function () {
@@ -2115,12 +2192,95 @@ $('ov-btn').addEventListener('pointerdown', e => {
   if (action) action();
 });
 
+
+// ---------------------------------------------------------------- v0.6 title screen (installHome drafted on Venice qwen3-coder)
+const DEMO = { name: 'Title', size: 3, start: [2, 0], dir: 0, cheese: [1, 1], walls: [] };
+let onHome = true, demoView = { row: 2, col: 0, angle: 0, ox: 0, oy: 0 }, demoSpin = 0, demoHop = 0, demoT = 0;
+function tweenDemo(to, dur) {
+  return new Promise(res => {
+    const f = { row: demoView.row, col: demoView.col, angle: demoView.angle }, t0 = performance.now();
+    (function fr(now) { const k = Math.min(1, (now - t0) / dur), e = k * k * (3 - 2 * k);
+      for (const key in to) demoView[key] = f[key] + (to[key] - f[key]) * e;
+      if (k < 1) requestAnimationFrame(fr); else res(); })(t0);
+  });
+}
+async function demoLoop() {   // route F, F, R repeated round the edge; every 8 s stop at an edge middle and nibble the cheese
+  let lastNibble = performance.now();
+  for (;;) {
+    if (!onHome) { await wait(300); continue; }
+    for (let k = 0; k < 2 && onHome; k++) {
+      const d = ((Math.round(demoView.angle / (Math.PI / 2)) % 4) + 4) % 4;
+      await tweenDemo({ row: demoView.row + DR[d], col: demoView.col + DC[d] }, STEP_MS);
+      const atMid = Math.round(demoView.row) === 1 || Math.round(demoView.col) === 1;
+      if (atMid && performance.now() - lastNibble > 8000) {
+        lastNibble = performance.now(); const a = demoView.angle;
+        await tweenDemo({ angle: a + Math.PI / 2 }, TURN_MS);   // face the cheese in the middle
+        for (let n = 0; n < 3; n++) { demoView.ox = 0.06; await wait(160); demoView.ox = 0; await wait(160); }
+        await tweenDemo({ angle: a }, TURN_MS);
+      }
+    }
+    if (onHome) await tweenDemo({ angle: demoView.angle + Math.PI / 2 }, TURN_MS);
+  }
+}
+
+function fitHomeTitle() {   // v1.1: title fits its column minus 48 px (24 px each side), capped at the spec size
+  const t = $('home-title'), col = $('home-col'); if (!t || !col || $('home').hidden) return;
+  const small = Math.min(innerWidth, innerHeight) < 700, land = innerWidth > innerHeight;
+  const cap = small ? (land && innerHeight < 500 ? 34 : 40) : 56;
+  t.style.fontSize = cap + 'px';
+  const room = col.clientWidth - 48;
+  let w = t.scrollWidth;
+  for (const s of t.querySelectorAll('span')) w = Math.max(w, s.getBoundingClientRect().width);
+  const r = t.getBoundingClientRect();
+  if (r.width > room || w > room) t.style.fontSize = Math.floor(cap * room / Math.max(r.width, w)) + 'px';
+}
+window.addEventListener('resize', fitHomeTitle);
+function installHome(api) {
+  const home = $('home'), picker = $('home-picker'), ctl = $('home-ctl'), dots = $('home-dots');
+  function caption() { $('home-level').textContent = 'Level ' + (api.getCurrent() + 1); }
+  function closePicker() { picker.hidden = true; ctl.hidden = false; }
+  function go(i) {
+    if (home.classList.contains('fade')) return;
+    home.classList.add('fade');
+    setTimeout(() => { home.hidden = true; home.classList.remove('fade'); api.onHide(); api.startLevel(i); }, 300);
+  }
+  function buildPicker() {
+    dots.innerHTML = '';
+    for (let i = 0; i < api.levelCount; i++) {
+      const b = document.createElement('button');
+      b.className = 'hdot' + (api.isDone(i) ? ' done' : '') + (i === api.getCurrent() ? ' current' : '');
+      b.textContent = String(i + 1); b.setAttribute('aria-label', 'Level ' + (i + 1));
+      b.addEventListener('pointerdown', e => { e.preventDefault(); ensureAudio(); go(i); });
+      dots.appendChild(b);
+    }
+  }
+  $('home-play').addEventListener('pointerdown', e => { e.preventDefault(); ensureAudio(); api.hop(); go(api.getCurrent()); });
+  $('home-levels').addEventListener('pointerdown', e => { e.preventDefault(); buildPicker(); ctl.hidden = true; picker.hidden = false; });
+  $('home-picker-back').addEventListener('pointerdown', e => { e.preventDefault(); closePicker(); });
+  return { show() { home.hidden = false; closePicker(); caption(); api.onShow(); fitHomeTitle(); } };
+}
+
 // ---------------------------------------------------------------- start
 loadProgress();
 levelIndex = progress.current;
 resetView();
 renderAll();
-Renderer.init(document.getElementById('board'), () => ({ level: LEVELS[levelIndex], view, celebrate }));
+Renderer.init(document.getElementById('hero'), () => onHome
+  ? { level: DEMO, view: demoView, celebrate: null, spin: demoSpin, hopY: demoHop, bg: 0xE9E5D8 }
+  : { level: LEVELS[levelIndex], view, celebrate, spin: 0 });
+(function spin(now) { if (onHome) { if (demoT) demoSpin += Math.min(0.1, (now - demoT) / 1000) * 6 * Math.PI / 180; demoT = now; } else demoT = 0; requestAnimationFrame(spin); })(performance.now());
+const Home = installHome({
+  levelCount: LEVELS.length,
+  getCurrent: () => progress.current,
+  isDone: i => !!progress.done[i],
+  startLevel: i => selectLevel(i),
+  onShow: () => { hideOverlay(); onHome = true; Renderer.attach($('hero')); },
+  onHide: () => { onHome = false; demoHop = 0; Renderer.attach($('board')); },
+  hop: () => { const t0 = performance.now(); (function h(now) { const k = (now - t0) / 300; demoHop = k < 1 ? 0.15 * Math.sin(Math.PI * k) : 0; if (k < 1) requestAnimationFrame(h); })(t0); },
+});
+Home.show();
+demoLoop();
+bindPress($('home-btn'), () => Home.show());
 })();
 </script>
 </body>

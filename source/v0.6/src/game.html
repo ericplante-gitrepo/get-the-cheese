@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Move That Mouse</title>
+<meta name="apple-mobile-web-app-title" content="Move That Mouse">
+<meta name="application-name" content="Move That Mouse">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<style>
+  html, body { margin: 0; min-height: 100%; background: #CECCBF; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+  [hidden] { display: none !important; }
+  #app { min-height: 100vh; box-sizing: border-box; padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)); display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  #title { font-weight: 700; font-size: 20px; color: #3d4a1a; }
+  #levels { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+  .dot { width: 44px; height: 44px; border-radius: 50%; border: 3px solid #3d4a1a; background: #f4f3e6; color: #3d4a1a; font-size: 16px; font-weight: 700; cursor: pointer; padding: 0; touch-action: manipulation; }
+  .dot.done { background: #dfe9b8; box-shadow: inset 0 0 0 3px #fff; }
+  .dot.current { background: #97B43E; }
+  main { flex: 1; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; box-sizing: border-box; }
+  #board { position: relative; width: min(96vw, 62vh); height: min(72vw, 46vh); border-radius: 14px; overflow: hidden; touch-action: manipulation; background: #e9e5d8; }
+  #board canvas { display: block; width: 100%; height: 100%; }
+  #panel { width: min(96vw, 640px); display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; }
+  #program { min-height: 64px; box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 6px; border-radius: 12px; background: #e4e2d4; }
+  .empty { color: #6b6a58; font-size: 16px; padding: 0 6px; }
+  .card-step { width: 52px; height: 52px; border: none; border-radius: 10px; color: #fff; font-size: 26px; font-weight: 700; box-shadow: 0 3px 0 rgba(0, 0, 0, 0.25); cursor: pointer; padding: 0; touch-action: manipulation; }
+  .card-step.active { outline: 4px solid #fff; box-shadow: 0 0 0 3px #3d4a1a; }
+  #count { font-size: 14px; color: #3d4a1a; text-align: right; }
+  #buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .btn { min-height: 72px; border: none; border-radius: 14px; color: #fff; background: var(--c); box-shadow: 0 4px 0 rgba(0, 0, 0, 0.25); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 28px; font-weight: 700; cursor: pointer; touch-action: manipulation; }
+  .btn .lb { font-size: 13px; font-weight: 600; }
+  .btn.yellow { color: #3d2b00; }
+  .btn.big { grid-column: span 2; min-height: 80px; font-size: 34px; letter-spacing: 2px; }
+  .btn:disabled { opacity: 0.5; cursor: default; }
+  #overlay { position: fixed; inset: 0; background: rgba(40, 40, 30, 0.55); display: flex; align-items: center; justify-content: center; z-index: 10; padding: 16px; box-sizing: border-box; }
+  #overlay .card { background: #fff; border-radius: 18px; padding: 24px; max-width: 420px; width: 100%; text-align: center; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); }
+  #overlay h2 { margin: 0 0 8px; color: #3d4a1a; font-size: 26px; }
+  #overlay p { margin: 0 0 18px; color: #3d3d30; font-size: 17px; line-height: 1.4; }
+  #ov-btn { min-height: 64px; min-width: 200px; border: none; border-radius: 14px; background: #3fae4a; color: #fff; font-size: 20px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 0 rgba(0, 0, 0, 0.25); touch-action: manipulation; }
+  @media (orientation: landscape) {
+    main { flex-direction: row; }
+    #board { width: min(60vw, 93vh); height: min(45vw, 70vh); }
+    #panel { width: min(36vw, 420px); }
+  }
+  @keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 4px 0 rgba(0,0,0,0.25), 0 0 0 0 rgba(255,255,255,0.8); }
+    50% { box-shadow: 0 4px 0 rgba(0,0,0,0.25), 0 0 20px 8px rgba(255,255,255,0.9), 0 0 0 6px rgba(255,255,255,0.4); }
+  }
+  .pulse-glow { animation: pulseGlow 1.5s ease-in-out; }
+
+  /* v0.3 look pass */
+  button { -webkit-tap-highlight-color: transparent; outline: none; }
+  button:focus-visible { outline: 3px solid #202b50; outline-offset: 2px; }
+  #buttons { grid-template-columns: repeat(20, 1fr); }
+  #buttons [data-move] { grid-column: span 5; }
+  #buttons #go { grid-column: span 8; }
+  #buttons #clear, #buttons #reset, #buttons #hint { grid-column: span 4; }
+  .btn { min-height: 72px; min-width: 64px; padding: 0 2px; }
+  .btn.yellow, .btn.navy { color: #202b50; }
+  #overlay { align-items: flex-end; background: rgba(40, 40, 30, 0.22); padding-bottom: max(24px, env(safe-area-inset-bottom)); }
+  #overlay .card { max-width: 320px; padding: 14px 18px; }
+  #overlay h2 { font-size: 22px; margin-bottom: 4px; }
+  #overlay p { font-size: 15px; margin-bottom: 10px; }
+  #app { min-height: 100vh; }
+  main { align-items: center; }
+  #board { width: 96vw; height: 62vh; }
+  @media (orientation: landscape) {
+    #app { height: 100vh; gap: 4px; }
+    main { flex: 1; min-height: 0; align-items: stretch; }
+    #board { width: auto; flex: 1; height: auto; min-height: 0; }
+    #panel { align-self: center; width: min(31vw, 340px); margin-right: 6px; box-sizing: border-box; }
+  }
+  /* v0.4: no page scroll in portrait; GO label centred */
+  #go span { white-space: nowrap; display: block; text-align: center; width: 100%; }
+  @media (orientation: portrait) {
+    html, body { height: 100%; overflow: hidden; }
+    #app { height: 100vh; height: 100dvh; min-height: 0; gap: 6px; }
+    main { flex: 1; min-height: 0; justify-content: flex-start; }
+    #board { flex: 1; height: auto; min-height: 0; }
+    #program { max-height: 128px; overflow-y: auto; }
+  }
+  @media (orientation: landscape) {
+    #buttons #go { font-size: 26px; letter-spacing: 1px; padding: 0 8px; }
+  }
+  /* v0.5: 20 levels in two rows of 10 */
+  #levels { display: grid; grid-template-columns: repeat(10, 40px); gap: 5px; }
+  .dot { width: 40px; height: 40px; font-size: 15px; }
+  /* v0.5 phone layout (Art Director spec, App Builder ok): fixed regions, 100dvh + safe areas, nothing shifts when moves are added */
+  #app { height: 100vh; height: 100dvh; min-height: 0; overflow: hidden; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; }
+  #title { font-size: 18px; line-height: 22px; flex: none; }
+  #levels { flex: none; grid-template-columns: repeat(10, 34px); gap: 4px; }
+  .dot { width: 34px; height: 34px; font-size: 14px; border-width: 2px; }
+  #panel { position: relative; flex: none; }
+  #program { height: 108px; max-height: none; min-height: 0; overflow-y: auto; align-content: flex-start; padding: 6px; scroll-behavior: smooth; }
+  .card-step { width: 44px; height: 44px; font-size: 22px; }
+  #count { position: absolute; right: 8px; top: 86px; font-size: 12px; pointer-events: none; background: rgba(228,226,212,0.85); border-radius: 6px; padding: 0 4px; }
+  .btn { min-height: clamp(46px, 7dvh, 72px); }
+  .btn.big { min-height: clamp(50px, 7.6dvh, 80px); font-size: 30px; }
+  .btn .lb { font-size: 12px; }
+  #buttons { gap: 6px; }
+  @media (orientation: portrait) {
+    #app { gap: 6px; }
+    main { flex: 1; min-height: 0; gap: 6px; justify-content: flex-start; }
+    #board { flex: 1 1 auto; min-height: 45dvh; height: auto; width: 100%; }
+    #panel { width: 100%; max-width: 640px; }
+  }
+  @media (orientation: landscape) {
+    #panel { align-self: center; }
+    #board { min-height: 0; }
+  }
+
+  /* v0.6 title screen (LANDING_v1.md; CSS/JS drafted on Venice qwen3-coder, fitted by hand) */
+  #home { position: fixed; inset: 0; z-index: 20; background: #E9E5D8; box-sizing: border-box; height: 100vh; height: 100dvh; overflow: hidden;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    display: grid; grid-template-rows: 55% 1fr; grid-template-columns: 100%; opacity: 1; transition: opacity .3s; }
+  #home.fade { opacity: 0; }
+  #hero { position: relative; min-height: 0; min-width: 0; overflow: hidden; }
+  #hero canvas { display: block; width: 100%; height: 100%; }
+  #home-col { min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; padding: 4px 12px 8px; box-sizing: border-box; }
+  #home-title { font-family: inherit; font-weight: 800; color: #202B50; text-align: center; margin: 0; font-size: 40px; line-height: 1.08; }
+  .swoosh { display: inline-block; border-bottom: 4px solid #FFD23F; border-radius: 0 0 50% 50% / 0 0 100% 100%; padding-bottom: 2px; }
+  #home-ctl, #home-picker { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  #home-play { background: #3fae4a; width: 220px; height: 72px; min-height: 64px; color: #fff; font: inherit; font-size: 28px; font-weight: 700; border: none; border-radius: 16px; box-shadow: 0 4px 0 #202B50; animation: homePulse 1.6s ease-in-out infinite; cursor: pointer; touch-action: manipulation; }
+  @keyframes homePulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+  #home-level { color: #202B50; font-size: 18px; font-weight: 600; margin-top: -2px; }
+  #home-levels { background: #E9E5D8; min-width: 220px; height: 64px; border: 3px solid #202B50; color: #202B50; font: inherit; font-size: 22px; font-weight: 700; border-radius: 16px; cursor: pointer; touch-action: manipulation; }
+  #home-dots { display: grid; grid-template-columns: repeat(10, 32px); gap: 4px; }
+  .hdot { width: 32px; height: 32px; border-radius: 50%; border: 2px solid #202B50; background: #fff; color: #202B50; font: inherit; font-size: 14px; font-weight: 700; padding: 0; cursor: pointer; touch-action: manipulation; }
+  .hdot.done { background: #dfe9b8; }
+  .hdot.current { background: #FFD23F; }
+  #home-picker-back { background: none; border: none; color: #202B50; font: inherit; font-size: 18px; font-weight: 700; min-height: 44px; min-width: 120px; cursor: pointer; }
+  #home-foot { color: #6B6B6B; font-size: 14px; text-align: center; }
+  #home .br { display: inline; }
+  @media (min-width: 700px) and (min-height: 700px) { #home-title { font-size: 56px; } #home-col { justify-content: space-evenly; } }
+  @media (orientation: landscape) {
+    #home { grid-template-rows: 100%; grid-template-columns: 55% 45%; }
+  }
+  @media (orientation: landscape) and (min-width: 900px) { #home .br { display: none; } #home-title { white-space: nowrap; font-size: min(56px, 4.6vw); } }
+  @media (orientation: landscape) and (max-height: 500px) { #home-dots { grid-template-columns: repeat(5, 34px); } .hdot { width: 34px; height: 34px; } #home-ctl, #home-picker { gap: 4px; } #home-picker-back { min-height: 36px; } #home-title { font-size: 34px; } }
+  @media (min-width: 700px) and (min-height: 700px) { #home-dots { grid-template-columns: repeat(5, 48px); gap: 8px; } .hdot { width: 48px; height: 48px; font-size: 18px; border-width: 3px; } }
+  /* v0.6.1 (LANDING v1.1): home button 44pt target, 16pt from the top-left safe area; title row is 44pt tall beside it */
+  #home-btn { position: absolute; left: calc(env(safe-area-inset-left, 0px) + 16px); top: calc(env(safe-area-inset-top, 0px) + 16px); width: 44px; height: 44px; border: none; border-radius: 12px; background: #E9E5D8; color: #202B50; font-size: 26px; line-height: 44px; padding: 0; cursor: pointer; z-index: 5; }
+  #app { padding-top: calc(env(safe-area-inset-top, 0px) + 16px); }
+  #title { min-height: 44px; line-height: 44px; padding: 0 64px; box-sizing: border-box; max-width: 100%; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* title column: title + buttons centred on the board's middle line, footer at the bottom; title sized by fitHomeTitle() */
+  #home-col { position: relative; justify-content: center; gap: 14px; padding-left: 24px; padding-right: 24px; }
+  #home-foot { position: absolute; left: 0; right: 0; bottom: 8px; }
+  @media (orientation: portrait) and (max-height: 700px) {   /* v0.6.1: win back the 44pt title row on short phones (390x664) */
+    #app { gap: 3px; padding-bottom: max(4px, env(safe-area-inset-bottom)); }
+    #levels { grid-template-columns: repeat(10, 30px); gap: 3px; }
+    .dot { width: 30px; height: 30px; font-size: 13px; }
+    main { gap: 3px; }
+    #panel { gap: 4px; }
+    #buttons { gap: 4px; }
+  }
+  @media (orientation: portrait) { #home-col { justify-content: space-evenly; gap: 0; } #home-foot { position: static; } }
+</style>
+</head>
+<body>
+<div id="home">
+  <div id="hero" aria-hidden="true"></div>
+  <div id="home-col">
+    <h1 id="home-title">Move That<br class="br"> <span class="swoosh">Mouse</span></h1>
+    <div id="home-ctl">
+      <button id="home-play" aria-label="Play">Play &#9654;</button>
+      <div id="home-level">Level 1</div>
+      <button id="home-levels">Levels</button>
+    </div>
+    <div id="home-picker" hidden>
+      <div id="home-dots"></div>
+      <button id="home-picker-back">Back</button>
+    </div>
+    <div id="home-foot">Program the mouse, find the cheese.</div>
+  </div>
+</div>
+<div id="app">
+  <button id="home-btn" aria-label="Title screen">&#8962;</button>
+  <div id="title"></div>
+  <div id="levels"></div>
+  <main>
+    <div id="board" aria-label="Game board"></div>
+    <section id="panel">
+      <div id="program"></div>
+      <div id="count"></div>
+      <div id="buttons">
+        <button class="btn" data-move="F" style="--c:#2f7fd8" aria-label="Forward"><span>&uarr;</span><span class="lb">Forward</span></button>
+        <button class="btn yellow" data-move="B" style="--c:#e8c12e" aria-label="Back"><span>&darr;</span><span class="lb">Back</span></button>
+        <button class="btn navy" data-move="L" style="--c:#f0873a" aria-label="Turn left"><span>&#8630;</span><span class="lb">Turn left</span></button>
+        <button class="btn" data-move="R" style="--c:#8f5fd6" aria-label="Turn right"><span>&#8631;</span><span class="lb">Turn right</span></button>
+        <button class="btn big" id="go" style="--c:#3fae4a" aria-label="Go"><span>&#9654; GO</span></button>
+        <button class="btn" id="clear" style="--c:#d83c3c" aria-label="Clear program"><span>&#10005;</span><span class="lb">Clear</span></button>
+        <button class="btn" id="reset" style="--c:#6d7280" aria-label="Reset mouse"><span>&#10227;</span><span class="lb">Reset mouse</span></button>
+        <button class="btn navy" id="hint" style="--c:#d8a93c" aria-label="Hint"><span>&#128161;</span><span class="lb">Hint</span></button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="overlay" hidden>
+  <div class="card">
+    <h2 id="ov-title"></h2>
+    <p id="ov-text"></p>
+    <button id="ov-btn"></button>
+  </div>
+</div>
+
+<!--THREE-->
+<!--RENDER-->
+<script id="logic">
+// Pure game logic. No DOM access here.
+const DR = [-1, 0, 1, 0], DC = [0, 1, 0, -1];   // 0=N 1=E 2=S 3=W
+const SIZE = 4;
+const MAX_PROGRAM = 24;
+const SIDE = { N: 0, E: 1, S: 2, W: 3 };
+
+// Each level: start [r,c], dir (0=N..3=W), cheese [r,c], walls ["r,c,SIDE", ...], size?, cells?
+const LEVELS = [
+  { name: "Straight Shot", start: [0, 0], dir: 2, cheese: [3, 0], walls: [] },
+  { name: "First Corner", start: [3, 3], dir: 1, cheese: [2, 2], walls: ['3,2,E'] },
+  { name: "Right Turn", start: [1, 2], dir: 1, cheese: [2, 0], walls: ['0,1,E', '1,0,S'] },
+  { name: "Fence Hop", start: [1, 0], dir: 2, cheese: [2, 2], walls: ['0,1,S', '1,0,S', '1,2,S'] },
+  { name: "Around the Post", start: [1, 1], dir: 3, cheese: [2, 0], walls: ['1,0,E', '2,0,E', '2,2,S'] },
+  { name: "Twisty Lane", start: [2, 0], dir: 2, cheese: [2, 2], walls: ['0,3,S', '1,0,S', '2,1,E', '3,1,E'] },
+  { name: "Long Way Round", start: [1, 2], dir: 3, cheese: [3, 0], walls: ['0,3,S', '1,1,E', '2,0,E', '2,1,S', '3,1,E'] },
+  { name: "Purple Maze", start: [3, 0], dir: 3, cheese: [2, 3], walls: ['1,1,E', '1,2,S', '2,0,E', '3,0,E', '3,1,E'] },
+  { name: "Back Out", start: [2, 3], dir: 0, cheese: [0, 3], walls: ['0,3,S', '1,1,E', '1,2,S', '1,3,S', '2,1,E', '2,2,S'] },
+  { name: "Big Maze", start: [0, 2], dir: 3, cheese: [3, 0], walls: ['0,0,E', '0,0,S', '0,2,S', '1,0,S', '1,1,S', '1,3,S', '3,0,E'] },
+  // ---- v0.5 world "Up High" (L11-L20): size, per-cell terrain { h, kind, rampDir, axis, water } ----
+  { name: 'First Ramp', size: 4, start: [3, 1], dir: 0, cheese: [0, 2], walls: [],
+    cells: { '0,2': { h: 1 }, '0,3': { h: 1 }, '1,3': { h: 0, kind: 'ramp', rampDir: 'N' } } },
+  { name: 'Down Again', size: 4, start: [3, 0], dir: 2, cheese: [3, 3], walls: ['3,0,E'],
+    cells: { '1,0': { h: 1 }, '1,1': { h: 1 }, '1,2': { h: 1 }, '2,0': { h: 0, kind: 'ramp', rampDir: 'N' }, '2,2': { h: 0, kind: 'ramp', rampDir: 'N' } } },
+  { name: 'Crate Maze', size: 4, start: [0, 0], dir: 1, cheese: [3, 0], walls: [],
+    cells: { '1,2': { h: 0, kind: 'crate' }, '2,0': { h: 0, kind: 'crate' }, '2,1': { h: 0, kind: 'crate' } } },
+  { name: 'The Stream', size: 4, start: [3, 0], dir: 0, cheese: [3, 3], walls: [],
+    cells: { '0,2': { h: 0, kind: 'water' }, '1,1': { h: 1 }, '1,2': { h: 1, kind: 'bridge', axis: 'EW', water: true }, '1,3': { h: 1 }, '2,1': { h: 0, kind: 'ramp', rampDir: 'N' }, '2,2': { h: 0, kind: 'water' }, '2,3': { h: 0, kind: 'ramp', rampDir: 'N' }, '3,2': { h: 0, kind: 'water' } } },
+  { name: 'Two Ramps', size: 5, start: [4, 4], dir: 3, cheese: [0, 4], walls: ['0,3,E'],
+    cells: { '0,3': { h: 1 }, '0,4': { h: 1 }, '1,3': { h: 1 }, '1,4': { h: 1 }, '2,0': { h: 1 }, '2,1': { h: 1 }, '2,3': { h: 0, kind: 'ramp', rampDir: 'N' }, '3,0': { h: 1 }, '3,1': { h: 1 }, '3,2': { h: 0, kind: 'ramp', rampDir: 'W' }, '4,3': { h: 0, kind: 'crate' } } },
+  { name: 'Under the Bridge', size: 5, start: [4, 0], dir: 1, cheese: [2, 2], cheeseLayer: 'under', walls: ['2,0,E', '1,0,E'],
+    cells: { '0,2': { h: 1 }, '1,2': { h: 1 }, '2,2': { h: 1, kind: 'bridge', axis: 'NS' }, '3,1': { h: 0, kind: 'crate' }, '3,2': { h: 1 }, '4,2': { h: 0, kind: 'crate' } } },
+  { name: 'Over and Under', size: 5, start: [3, 0], dir: 3, cheese: [2, 2], cheeseLayer: 'under', walls: ['2,0,S'],
+    cells: { '1,1': { h: 0, kind: 'ramp', rampDir: 'E' }, '1,2': { h: 1 }, '2,2': { h: 1, kind: 'bridge', axis: 'NS' }, '2,3': { h: 0, kind: 'crate' }, '3,1': { h: 0, kind: 'ramp', rampDir: 'E' }, '3,2': { h: 1 } } },
+  { name: 'Back Up', size: 5, start: [1, 2], dir: 1, cheese: [4, 4], walls: ['3,0,E'],
+    cells: { '1,1': { h: 0, kind: 'ramp', rampDir: 'E' }, '1,2': { h: 1 }, '1,3': { h: 1 }, '2,2': { h: 0, kind: 'crate' }, '3,4': { h: 0, kind: 'crate' }, '4,1': { h: 0, kind: 'crate' } } },
+  { name: 'Island', size: 5, start: [0, 3], dir: 3, cheese: [1, 3], walls: [],
+    cells: { '1,1': { h: 0, kind: 'water' }, '1,2': { h: 1 }, '1,3': { h: 1 }, '2,0': { h: 0, kind: 'ramp', rampDir: 'S' }, '2,1': { h: 0, kind: 'water' }, '2,2': { h: 1 }, '2,3': { h: 1 }, '3,0': { h: 1 }, '3,1': { h: 1, kind: 'bridge', axis: 'EW', water: true }, '3,2': { h: 1 }, '3,3': { h: 0, kind: 'water' }, '4,1': { h: 0, kind: 'water' }, '4,2': { h: 0, kind: 'water' }, '4,3': { h: 0, kind: 'water' } } },
+  { name: 'Big Climb', size: 5, start: [4, 1], dir: 0, cheese: [3, 2], walls: [],
+    cells: { '1,1': { h: 1 }, '1,2': { h: 1, kind: 'bridge', axis: 'EW' }, '1,3': { h: 0, kind: 'ramp', rampDir: 'W' }, '2,1': { h: 1 }, '2,3': { h: 0, kind: 'water' }, '3,0': { h: 0, kind: 'water' }, '3,1': { h: 0, kind: 'ramp', rampDir: 'N' }, '3,3': { h: 0, kind: 'water' }, '4,2': { h: 0, kind: 'water' }, '4,3': { h: 0, kind: 'water' } } },
+];
+
+function inBoard(level, r, c) {
+  const sz = level.size || SIZE;
+  return r >= 0 && r < sz && c >= 0 && c < sz;
+}
+
+function cellAt(level, r, c) {
+  if (!inBoard(level, r, c)) return { h: 0 };
+  const key = r + ',' + c;
+  return (level.cells && level.cells[key]) || { h: 0 };
+}
+
+// Canonical key for the edge between a cell and its neighbour in direction d.
+// Only E and S edges are stored, so "0,1,W" and "0,0,E" give the same key.
+function edgeKey(r, c, d) {
+  if (d === 0) return (r - 1) + ',' + c + ',S';
+  if (d === 1) return r + ',' + c + ',E';
+  if (d === 2) return r + ',' + c + ',S';
+  return r + ',' + (c - 1) + ',E';
+}
+
+function normWalls(walls) {
+  return new Set((walls || []).map(w => {
+    const parts = String(w).split(',');
+    const d = SIDE[parts[2].trim().toUpperCase()];
+    if (d === undefined) throw new Error('bad wall ' + w);
+    return edgeKey(+parts[0], +parts[1], d);
+  }));
+}
+
+function hasWall(walls, r, c, d) {
+  return normWalls(walls).has(edgeKey(r, c, d));
+}
+
+function exitHeight(level, r, c, layer, d) {
+  const cell = cellAt(level, r, c);
+  if (!cell.kind) return cell.h;
+  if (cell.kind === 'crate' || cell.kind === 'water') return cell.h;
+
+  if (cell.kind === 'ramp') {
+    const rd = SIDE[cell.rampDir];
+    if (d === rd) return 1;
+    if (d === (rd + 2) % 4) return 0;
+    return null; // sideways
+  }
+
+  if (cell.kind === 'bridge') {
+    if (layer === 'top') {
+      if (cell.axis === 'NS' && (d === 0 || d === 2)) return 1;
+      if (cell.axis === 'EW' && (d === 1 || d === 3)) return 1;
+      return null;
+    } else if (layer === 'under') {
+      if (cell.axis === 'NS' && (d === 1 || d === 3)) return 0;
+      if (cell.axis === 'EW' && (d === 0 || d === 2)) return 0;
+      return null;
+    }
+  }
+
+  return cell.h;
+}
+
+function entryHeightOk(level, tr, tc, e, dir) {
+  const cell = cellAt(level, tr, tc);
+  if (e === null || e === undefined) return false;
+  if (cell.kind === 'crate' || cell.kind === 'water') return false;
+  if (cell.kind === 'ramp') {
+    const rd = SIDE[cell.rampDir];
+    if (dir === rd) return e === 0;
+    if (dir === (rd + 2) % 4) return e === 1;
+    return false;
+  }
+  if (cell.kind === 'bridge') {
+    const along = cell.axis === 'NS' ? (dir === 0 || dir === 2) : (dir === 1 || dir === 3);
+    return along ? e === 1 : (e === 0 && !cell.water);
+  }
+  return e === cell.h;
+}
+
+// state = { r, c, d [, layer] }. Moves: 'F' forward, 'B' back, 'L' turn left, 'R' turn right.
+function step(level, state, move) {
+  const { r, c, d, layer } = state;
+  const turned = nd => (layer ? { r, c, d: nd, layer } : { r, c, d: nd });
+  if (move === 'L') return { type: 'turn', state: turned((d + 3) % 4) };
+  if (move === 'R') return { type: 'turn', state: turned((d + 1) % 4) };
+  if (move !== 'F' && move !== 'B') throw new Error('bad move ' + move);
+  const dir = move === 'F' ? d : (d + 2) % 4;
+  if (hasWall(level.walls, r, c, dir)) return { type: 'wall', state };
+  const nr = r + DR[dir], nc = c + DC[dir];
+  if (!inBoard(level, nr, nc)) return { type: 'off', state };
+  const eh = exitHeight(level, r, c, layer, dir);
+  if (eh === null) return { type: 'wall', state };
+  const targetCell = cellAt(level, nr, nc);
+  const entryOk = entryHeightOk(level, nr, nc, eh, dir);
+  if (!entryOk) return { type: 'wall', state };
+  const newState = { r: nr, c: nc, d };
+  if (targetCell.kind === 'bridge') newState.layer = eh === 1 ? 'top' : 'under';
+  return { type: 'move', state: newState };
+}
+
+function runProgram(level, moves) {
+  if (!moves || moves.length === 0) return { result: 'empty', at: 0, trace: [] };
+  let state = { r: level.start[0], c: level.start[1], d: level.dir };
+  const trace = [state];
+  for (let i = 0; i < moves.length; i++) {
+    const res = step(level, state, moves[i]);
+    if (res.type === 'wall') return { result: 'wall', at: i, trace };
+    if (res.type === 'off') return { result: 'off', at: i, trace };
+    state = res.state;
+    trace.push(state);
+  }
+  const won = isWin(level, state);
+  return { result: won ? 'win' : 'short', at: moves.length - 1, trace };
+}
+
+function isWin(level, state) {
+  if (state.r !== level.cheese[0] || state.c !== level.cheese[1]) return false;
+  const cheeseCell = cellAt(level, level.cheese[0], level.cheese[1]);
+  if (cheeseCell.kind === 'bridge') {
+    const reqLayer = level.cheeseLayer || 'top';
+    return state.layer === reqLayer;
+  }
+  return true;
+}
+
+// Breadth-first search over (cell, dir, layer). Returns the shortest winning move list or null.
+function solve(level, maxLen = 16) {
+  // Shortest program; ties broken by fewest Back moves, then by F < L < R < B order.
+  const ORDER = 'FLRB';
+  const start = { r: level.start[0], c: level.start[1], d: level.dir };
+  const key = s => s.r + ',' + s.c + ',' + s.d + (s.layer ? ',' + s.layer : '');
+  const better = (a, b) => {
+    const ba = a.filter(m => m === 'B').length, bb = b.filter(m => m === 'B').length;
+    if (ba !== bb) return ba < bb;
+    for (let k = 0; k < a.length; k++) if (a[k] !== b[k]) return ORDER.indexOf(a[k]) < ORDER.indexOf(b[k]);
+    return false;
+  };
+  const seen = new Set([key(start)]);
+  let frontier = new Map([[key(start), { state: start, moves: [] }]]);
+  for (let depth = 0; depth < maxLen; depth++) {
+    const next = new Map();
+    let best = null;
+    for (const node of frontier.values()) for (const m of ORDER) {
+      const res = step(level, node.state, m);
+      if (res.type === 'wall' || res.type === 'off') continue;
+      const moves = node.moves.concat(m);
+      if (isWin(level, res.state)) {
+        if (!best || better(moves, best)) best = moves;
+        continue;
+      }
+      const k = key(res.state);
+      if (seen.has(k)) continue;
+      const cur = next.get(k);
+      if (!cur || better(moves, cur.moves)) next.set(k, { state: res.state, moves });
+    }
+    if (best) return best;
+    for (const k of next.keys()) seen.add(k);
+    frontier = next;
+    if (!next.size) break;
+  }
+  return null;
+}
+
+function nextHint(level, moves) {
+  const sol = solve(level);
+  if (!sol) return { kind: 'clear' };
+  for (let i = 0; i < Math.min(moves.length, sol.length); i++) {
+    if (moves[i] !== sol[i]) return { kind: 'clear' };
+  }
+  if (moves.length === sol.length) return { kind: 'done' };
+  if (moves.length > sol.length) return { kind: 'clear' };
+  return { kind: 'move', move: sol[moves.length] };
+}
+
+function surfaceY(level, r, c, layer) {
+  const cell = cellAt(level, r, c);
+  if (cell.kind === 'ramp') return 0.5;
+  if (cell.kind === 'bridge') return layer === 'under' ? 0 : 1;
+  if (cell.kind === 'crate' || cell.kind === 'water') return 0;
+  return cell.h;
+}
+
+if (typeof module !== 'undefined') module.exports = {
+  LEVELS, DR, DC, step, runProgram, solve, normWalls, hasWall, nextHint,
+  cellAt, isWin, surfaceY, inBoard, MAX_PROGRAM, SIDE
+};
+</script>
+
+<script>
+(() => {
+'use strict';
+
+const $ = id => document.getElementById(id);
+const STORE_KEY = 'getTheCheese.v1';
+const MOVES = {
+  F: { color: '#2f7fd8', icon: '\u2191' },
+  B: { color: '#e8c12e', icon: '\u2193' },
+  L: { color: '#f0873a', icon: '\u21BA' },
+  R: { color: '#8f5fd6', icon: '\u21BB' },
+};
+const STEP_MS = 450;   // per tile (style guide v2)
+const TURN_MS = 350;   // 90-degree turn
+
+let S = 300;                 // canvas css size
+let levelIndex = 0;
+let program = [];
+let running = false;
+let view = null;             // visual state: { row, col, angle, ox, oy } (floats)
+let celebrate = null;        // { t0, parts }
+let overlayAction = null;
+let progress = { current: 0, done: LEVELS.map(() => false) };
+
+// ---------------------------------------------------------------- storage
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return;
+    const p = JSON.parse(raw);
+    if (p && Array.isArray(p.done) && p.done.length === LEVELS.length) {
+      progress.done = p.done.map(Boolean);
+      if (Number.isInteger(p.current) && p.current >= 0 && p.current < LEVELS.length) progress.current = p.current;
+    }
+  } catch (e) { /* ignore */ }
+}
+function saveProgress() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(progress)); } catch (e) { /* ignore */ }
+}
+
+// ---------------------------------------------------------------- audio (created on first gesture)
+let audio = null;
+function ensureAudio() {
+  if (audio) return audio;
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) audio = new AC();
+  } catch (e) { audio = null; }
+  return audio;
+}
+function beep(freq, dur = 0.12, type = 'square') {
+  try {
+    const a = ensureAudio();
+    if (!a) return;
+    if (a.state === 'suspended') a.resume();
+    const o = a.createOscillator(), g = a.createGain();
+    const t = a.currentTime;
+    o.type = type;
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(0.08, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g);
+    g.connect(a.destination);
+    o.start(t);
+    o.stop(t + dur);
+  } catch (e) { /* audio unavailable */ }
+}
+
+// ---------------------------------------------------------------- view & animation
+function resetView() {
+  const L = LEVELS[levelIndex];
+  view = { row: L.start[0], col: L.start[1], angle: L.dir * Math.PI / 2, ox: 0, oy: 0 };
+}
+
+function wait(ms) { return new Promise(res => setTimeout(res, ms)); }
+
+function animateTo(row, col, angle, dur) {
+  return new Promise(res => {
+    const f = { row: view.row, col: view.col, angle: view.angle };
+    const t0 = performance.now();
+    function frame(now) {
+      const k = Math.min(1, (now - t0) / dur);
+      const e = k * k * (3 - 2 * k);
+      view.row = f.row + (row - f.row) * e;
+      view.col = f.col + (col - f.col) * e;
+      view.angle = f.angle + (angle - f.angle) * e;
+      if (k < 1) requestAnimationFrame(frame); else res();
+    }
+    requestAnimationFrame(frame);
+  });
+}
+
+function bump(kind, dr, dc) {
+  return new Promise(res => {
+    const dur = kind === 'wall' ? 450 : 650;
+    const amp = kind === 'wall' ? 0.12 : 0.3;
+    const cycles = kind === 'wall' ? 3 : 1;
+    const t0 = performance.now();
+    function frame(now) {
+      const k = (now - t0) / dur;
+      if (k >= 1) { view.ox = 0; view.oy = 0; res(); return; }
+      const env = (1 - k) * Math.sin(k * Math.PI * 2 * cycles);
+      view.ox = dc * amp * env;
+      view.oy = dr * amp * env;
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  });
+}
+
+// ---------------------------------------------------------------- rendering of UI
+function setLocked(on) {
+  document.querySelectorAll('#app button').forEach(b => { b.disabled = on; });
+}
+
+function renderTitle() {
+  $('title').textContent = 'Level ' + (levelIndex + 1) + ': ' + LEVELS[levelIndex].name;
+}
+
+function renderLevelDots() {
+  const box = $('levels');
+  box.innerHTML = '';
+  LEVELS.forEach((lv, i) => {
+    const b = document.createElement('button');
+    b.className = 'dot' + (progress.done[i] ? ' done' : '') + (i === levelIndex ? ' current' : '');
+    b.textContent = String(i + 1);
+    b.setAttribute('aria-label', 'Level ' + (i + 1) + ': ' + lv.name);
+    b.disabled = running;
+    b.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      ensureAudio();
+      if (!running) selectLevel(i);
+    });
+    box.appendChild(b);
+  });
+}
+
+function renderProgram(active) {
+  const box = $('program');
+  box.innerHTML = '';
+  if (program.length === 0) {
+    const hint = document.createElement('div');
+    hint.className = 'empty';
+    hint.textContent = 'Tap the arrows to plan the route';
+    box.appendChild(hint);
+  }
+  program.forEach((m, i) => {
+    const card = document.createElement('button');
+    card.className = 'card-step' + (i === active ? ' active' : '');
+    card.style.background = MOVES[m].color;
+    card.textContent = MOVES[m].icon;
+    card.title = 'Tap to remove this step';
+    card.setAttribute('aria-label', 'Remove step ' + (i + 1));
+    card.disabled = running;
+    card.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      ensureAudio();
+      if (running) return;
+      program.splice(i, 1);
+      renderAll();
+    });
+    box.appendChild(card);
+  });
+  $('count').textContent = program.length + ' / ' + MAX_PROGRAM;
+  // v0.5: the move list has a fixed height; keep the newest (or the running) move in view
+  const act = box.querySelector('.card-step.active');
+  if (act) box.scrollTop = Math.max(0, act.offsetTop - box.offsetTop - 6); else box.scrollTop = box.scrollHeight;
+}
+
+function renderAll(active = -1) {
+  renderTitle();
+  renderLevelDots();
+  renderProgram(active);
+  setLocked(running);
+}
+
+// ---------------------------------------------------------------- overlays
+function showOverlay(title, text, label, action) {
+  $('ov-title').textContent = title;
+  $('ov-text').textContent = text;
+  $('ov-btn').textContent = label;
+  overlayAction = action;
+  $('overlay').hidden = false;
+}
+function hideOverlay() {
+  $('overlay').hidden = true;
+  overlayAction = null;
+}
+
+function showWin() {
+  progress.done[levelIndex] = true;
+  saveProgress();
+  celebrate = {
+    t0: performance.now(),
+    parts: Array.from({ length: 70 }, () => ({
+      x0: Math.random(),
+      y0: -0.05 - Math.random() * 0.1,
+      vx: (Math.random() - 0.5) * 0.4,
+      vy: 0.1 + Math.random() * 0.3,
+      spin: (Math.random() - 0.5) * 16,
+      c: Math.floor(Math.random() * 5),
+    })),
+  };
+  [523, 659, 784].forEach((f, i) => setTimeout(() => beep(f, 0.15), i * 140));
+  const last = levelIndex === LEVELS.length - 1;
+  renderLevelDots();
+  setTimeout(() => showOverlay(
+    'You got the cheese!',
+    'Nice work, the mouse found its treat.',
+    last ? 'Back to level 1' : 'Next level',
+    () => selectLevel((levelIndex + 1) % LEVELS.length)
+  ), 1000);   // let the hop and nibble play first
+}
+
+function showLose(verdict) {
+  const why = { wall: 'Bumped into a wall.', off: 'Wandered off the board.', short: 'Ended on the wrong tile.' }[verdict] || 'Not quite.';
+  showOverlay(
+    'Oops! Try again',
+    why + ' Your program is still here, so you can fix it.',
+    'Try again',
+    () => { hideOverlay(); resetView(); renderAll(); }
+  );
+}
+
+// ---------------------------------------------------------------- game flow
+function selectLevel(i) {
+  levelIndex = i;
+  progress.current = i;
+  program = [];
+  hideOverlay();
+  resetView();
+  saveProgress();
+  renderAll();
+}
+
+async function playProgram() {
+  const L = LEVELS[levelIndex];
+  const moves = program.slice();
+  running = true;
+  hideOverlay();
+  resetView();
+  renderAll(-1);
+  let state = { r: L.start[0], c: L.start[1], d: L.dir };
+
+  for (let i = 0; i < moves.length; i++) {
+    renderProgram(i);
+    const m = moves[i];
+    const res = step(L, state, m);
+    if (res.type === 'wall' || res.type === 'off') {
+      const ad = m === 'B' ? (state.d + 2) % 4 : state.d;
+      beep(res.type === 'wall' ? 180 : 260, 0.2, 'sawtooth');
+      await bump(res.type, DR[ad], DC[ad]);
+      break;
+    }
+    if (res.type === 'turn') {
+      beep(440, 0.06);
+      await animateTo(view.row, view.col, view.angle + (m === 'L' ? -1 : 1) * Math.PI / 2, TURN_MS);
+    } else {
+      beep(660, 0.06);
+      view.layer = res.state.layer || state.layer;   // v0.5: keep the bridge layer while leaving or entering a bridge cell
+      await animateTo(res.state.r, res.state.c, view.angle, STEP_MS);
+      view.layer = res.state.layer;
+    }
+    state = res.state;
+    await wait(60);
+  }
+
+  running = false;
+  renderAll(-1);
+  const verdict = runProgram(L, moves).result;
+  if (verdict === 'win') showWin();
+  else showLose(verdict);
+}
+
+// ---------------------------------------------------------------- input
+function bindPress(el, fn) {
+  el.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    ensureAudio();
+    if (!running) fn();
+  });
+}
+
+document.querySelectorAll('[data-move]').forEach(b => {
+  bindPress(b, () => {
+    if (program.length >= MAX_PROGRAM) return;
+    program.push(b.dataset.move);
+    beep(520, 0.06);
+    renderAll();
+  });
+});
+
+bindPress($('go'), () => {
+  if (program.length > 0) playProgram();
+});
+
+bindPress($('clear'), () => {
+  program = [];
+  renderAll();
+});
+
+bindPress($('reset'), () => {
+  hideOverlay();
+  resetView();
+  renderAll();
+});
+
+bindPress($('hint'), () => {
+  if (running) return;
+  const hint = nextHint(LEVELS[levelIndex], program);
+  if (hint.kind === 'move') {
+    const btn = document.querySelector('[data-move="' + hint.move + '"]');
+    if (btn) { btn.classList.add('pulse-glow'); setTimeout(() => btn.classList.remove('pulse-glow'), 1500); }
+  } else if (hint.kind === 'clear') {
+    const btn = $('clear');
+    if (btn) { btn.classList.add('pulse-glow'); setTimeout(() => btn.classList.remove('pulse-glow'), 1500); }
+  }
+});
+
+$('ov-btn').addEventListener('pointerdown', e => {
+  e.preventDefault();
+  ensureAudio();
+  const action = overlayAction;
+  if (action) action();
+});
+
+
+// ---------------------------------------------------------------- v0.6 title screen (installHome drafted on Venice qwen3-coder)
+const DEMO = { name: 'Title', size: 3, start: [2, 0], dir: 0, cheese: [1, 1], walls: [] };
+let onHome = true, demoView = { row: 2, col: 0, angle: 0, ox: 0, oy: 0 }, demoSpin = 0, demoHop = 0, demoT = 0;
+function tweenDemo(to, dur) {
+  return new Promise(res => {
+    const f = { row: demoView.row, col: demoView.col, angle: demoView.angle }, t0 = performance.now();
+    (function fr(now) { const k = Math.min(1, (now - t0) / dur), e = k * k * (3 - 2 * k);
+      for (const key in to) demoView[key] = f[key] + (to[key] - f[key]) * e;
+      if (k < 1) requestAnimationFrame(fr); else res(); })(t0);
+  });
+}
+async function demoLoop() {   // route F, F, R repeated round the edge; every 8 s stop at an edge middle and nibble the cheese
+  let lastNibble = performance.now();
+  for (;;) {
+    if (!onHome) { await wait(300); continue; }
+    for (let k = 0; k < 2 && onHome; k++) {
+      const d = ((Math.round(demoView.angle / (Math.PI / 2)) % 4) + 4) % 4;
+      await tweenDemo({ row: demoView.row + DR[d], col: demoView.col + DC[d] }, STEP_MS);
+      const atMid = Math.round(demoView.row) === 1 || Math.round(demoView.col) === 1;
+      if (atMid && performance.now() - lastNibble > 8000) {
+        lastNibble = performance.now(); const a = demoView.angle;
+        await tweenDemo({ angle: a + Math.PI / 2 }, TURN_MS);   // face the cheese in the middle
+        for (let n = 0; n < 3; n++) { demoView.ox = 0.06; await wait(160); demoView.ox = 0; await wait(160); }
+        await tweenDemo({ angle: a }, TURN_MS);
+      }
+    }
+    if (onHome) await tweenDemo({ angle: demoView.angle + Math.PI / 2 }, TURN_MS);
+  }
+}
+
+function fitHomeTitle() {   // v1.1: title fits its column minus 48 px (24 px each side), capped at the spec size
+  const t = $('home-title'), col = $('home-col'); if (!t || !col || $('home').hidden) return;
+  const small = Math.min(innerWidth, innerHeight) < 700, land = innerWidth > innerHeight;
+  const cap = small ? (land && innerHeight < 500 ? 34 : 40) : 56;
+  t.style.fontSize = cap + 'px';
+  const room = col.clientWidth - 48;
+  let w = t.scrollWidth;
+  for (const s of t.querySelectorAll('span')) w = Math.max(w, s.getBoundingClientRect().width);
+  const r = t.getBoundingClientRect();
+  if (r.width > room || w > room) t.style.fontSize = Math.floor(cap * room / Math.max(r.width, w)) + 'px';
+}
+window.addEventListener('resize', fitHomeTitle);
+function installHome(api) {
+  const home = $('home'), picker = $('home-picker'), ctl = $('home-ctl'), dots = $('home-dots');
+  function caption() { $('home-level').textContent = 'Level ' + (api.getCurrent() + 1); }
+  function closePicker() { picker.hidden = true; ctl.hidden = false; }
+  function go(i) {
+    if (home.classList.contains('fade')) return;
+    home.classList.add('fade');
+    setTimeout(() => { home.hidden = true; home.classList.remove('fade'); api.onHide(); api.startLevel(i); }, 300);
+  }
+  function buildPicker() {
+    dots.innerHTML = '';
+    for (let i = 0; i < api.levelCount; i++) {
+      const b = document.createElement('button');
+      b.className = 'hdot' + (api.isDone(i) ? ' done' : '') + (i === api.getCurrent() ? ' current' : '');
+      b.textContent = String(i + 1); b.setAttribute('aria-label', 'Level ' + (i + 1));
+      b.addEventListener('pointerdown', e => { e.preventDefault(); ensureAudio(); go(i); });
+      dots.appendChild(b);
+    }
+  }
+  $('home-play').addEventListener('pointerdown', e => { e.preventDefault(); ensureAudio(); api.hop(); go(api.getCurrent()); });
+  $('home-levels').addEventListener('pointerdown', e => { e.preventDefault(); buildPicker(); ctl.hidden = true; picker.hidden = false; });
+  $('home-picker-back').addEventListener('pointerdown', e => { e.preventDefault(); closePicker(); });
+  return { show() { home.hidden = false; closePicker(); caption(); api.onShow(); fitHomeTitle(); } };
+}
+
+// ---------------------------------------------------------------- start
+loadProgress();
+levelIndex = progress.current;
+resetView();
+renderAll();
+Renderer.init(document.getElementById('hero'), () => onHome
+  ? { level: DEMO, view: demoView, celebrate: null, spin: demoSpin, hopY: demoHop, bg: 0xE9E5D8 }
+  : { level: LEVELS[levelIndex], view, celebrate, spin: 0 });
+(function spin(now) { if (onHome) { if (demoT) demoSpin += Math.min(0.1, (now - demoT) / 1000) * 6 * Math.PI / 180; demoT = now; } else demoT = 0; requestAnimationFrame(spin); })(performance.now());
+const Home = installHome({
+  levelCount: LEVELS.length,
+  getCurrent: () => progress.current,
+  isDone: i => !!progress.done[i],
+  startLevel: i => selectLevel(i),
+  onShow: () => { hideOverlay(); onHome = true; Renderer.attach($('hero')); },
+  onHide: () => { onHome = false; demoHop = 0; Renderer.attach($('board')); },
+  hop: () => { const t0 = performance.now(); (function h(now) { const k = (now - t0) / 300; demoHop = k < 1 ? 0.15 * Math.sin(Math.PI * k) : 0; if (k < 1) requestAnimationFrame(h); })(t0); },
+});
+Home.show();
+demoLoop();
+bindPress($('home-btn'), () => Home.show());
+})();
+</script>
+</body>
+</html>
