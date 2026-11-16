@@ -30,6 +30,10 @@
   .btn .lb { font-size: 13px; font-weight: 600; }
   .btn.yellow { color: #3d2b00; }
   .btn.big { grid-column: span 2; min-height: 80px; font-size: 34px; letter-spacing: 2px; }
+  .btn.arrow { width: 72px; height: 72px; min-width: 72px; min-height: 72px; max-height: 72px; padding: 0; justify-self: center; box-shadow: 0 3px 0 #202B50; transition: transform .1s, filter .1s; }
+  .btn.arrow svg { width: 55%; height: 55%; display: block; }
+  .btn.arrow.press { transform: scale(0.95); filter: brightness(0.9); }
+  .card-step svg { width: 60%; height: 60%; display: block; margin: auto; }
   .btn:disabled { opacity: 0.5; cursor: default; }
   #overlay { position: fixed; inset: 0; background: rgba(40, 40, 30, 0.55); display: flex; align-items: center; justify-content: center; z-index: 10; padding: 16px; box-sizing: border-box; }
   #overlay .card { background: #fff; border-radius: 18px; padding: 24px; max-width: 420px; width: 100%; text-align: center; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); }
@@ -151,9 +155,15 @@
     .dot { width: 30px; height: 30px; font-size: 13px; }
     main { gap: 3px; }
     #panel { gap: 4px; }
-    #buttons { gap: 4px; }
+    #buttons { gap: 4px; column-gap: 4px; }
+    #program { height: 78px; }   /* v0.7: the 72pt arrows are taller than the old turn row; the move list gives back the room (1.5 rows, scrolls) */
+    #count { top: 56px; }
   }
   @media (orientation: portrait) { #home-col { justify-content: space-evenly; gap: 0; } #home-foot { position: static; } }
+  @media (orientation: landscape) and (min-width: 700px) and (min-height: 700px) { #panel { width: min(40vw, 400px); } }   /* v0.7: room for four 88pt arrows */
+  #buttons { column-gap: 10px; }
+  @media (min-width: 700px) and (min-height: 700px) { .btn.arrow { width: 88px; height: 88px; min-width: 88px; min-height: 88px; max-height: 88px; } }
+  #buttons [data-move] { grid-column: span 5; }
 </style>
 </head>
 <body>
@@ -183,10 +193,10 @@
       <div id="program"></div>
       <div id="count"></div>
       <div id="buttons">
-        <button class="btn" data-move="F" style="--c:#2f7fd8" aria-label="Forward"><span>&uarr;</span><span class="lb">Forward</span></button>
-        <button class="btn yellow" data-move="B" style="--c:#e8c12e" aria-label="Back"><span>&darr;</span><span class="lb">Back</span></button>
-        <button class="btn navy" data-move="L" style="--c:#f0873a" aria-label="Turn left"><span>&#8630;</span><span class="lb">Turn left</span></button>
-        <button class="btn" data-move="R" style="--c:#8f5fd6" aria-label="Turn right"><span>&#8631;</span><span class="lb">Turn right</span></button>
+        <button class="btn arrow" data-move="L" style="--c:#8F5FD6" aria-label="Left"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M22 50 L52 22 L52 38 L78 38 L78 62 L52 62 L52 78 Z" fill="#fff" stroke="#202B50" stroke-width="5" stroke-linejoin="round"/></svg></button>
+        <button class="btn arrow" data-move="U" style="--c:#2F7FD8" aria-label="Up"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 22 L78 52 L62 52 L62 78 L38 78 L38 52 L22 52 Z" fill="#fff" stroke="#202B50" stroke-width="5" stroke-linejoin="round"/></svg></button>
+        <button class="btn arrow" data-move="D" style="--c:#F0873A" aria-label="Down"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 78 L78 48 L62 48 L62 22 L38 22 L38 48 L22 48 Z" fill="#fff" stroke="#202B50" stroke-width="5" stroke-linejoin="round"/></svg></button>
+        <button class="btn arrow" data-move="R" style="--c:#E8C12E" aria-label="Right"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M78 50 L48 22 L48 38 L22 38 L22 62 L48 62 L48 78 Z" fill="#202B50"/></svg></button>
         <button class="btn big" id="go" style="--c:#3fae4a" aria-label="Go"><span>&#9654; GO</span></button>
         <button class="btn" id="clear" style="--c:#d83c3c" aria-label="Clear program"><span>&#10005;</span><span class="lb">Clear</span></button>
         <button class="btn" id="reset" style="--c:#6d7280" aria-label="Reset mouse"><span>&#10227;</span><span class="lb">Reset mouse</span></button>
@@ -1386,7 +1396,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     var THREE = window.THREE;
     var n = boardN();
     cam.aspect = w / h;
-    var pitch = 50 * Math.PI / 180, yaw = 30 * Math.PI / 180 + (state.yawExtra || 0); // v0.6: title screen spins the board
+    var pitch = 50 * Math.PI / 180, yaw = 0 + (state.yawExtra || 0); // v2.5: yaw 0 so Up is the top of the screen; title board fixed
     var maxH = state.maxH || 0;
     var target = new THREE.Vector3(0, FLOOR_Y + maxH / 2, 0);
     var land = window.innerWidth > window.innerHeight;
@@ -1757,14 +1767,15 @@ function entryHeightOk(level, tr, tc, e, dir) {
   return e === cell.h;
 }
 
-// state = { r, c, d [, layer] }. Moves: 'F' forward, 'B' back, 'L' turn left, 'R' turn right.
+// state = { r, c, d [, layer] }. v0.7 moves are screen-relative: 'U' north (top of screen), 'R' east, 'D' south, 'L' west.
+// The mouse turns to face the move first, so a blocked move still leaves it facing that way.
+const MOVE_DIR = { U: 0, R: 1, D: 2, L: 3 };
 function step(level, state, move) {
-  const { r, c, d, layer } = state;
-  const turned = nd => (layer ? { r, c, d: nd, layer } : { r, c, d: nd });
-  if (move === 'L') return { type: 'turn', state: turned((d + 3) % 4) };
-  if (move === 'R') return { type: 'turn', state: turned((d + 1) % 4) };
-  if (move !== 'F' && move !== 'B') throw new Error('bad move ' + move);
-  const dir = move === 'F' ? d : (d + 2) % 4;
+  const { r, c, layer } = state;
+  if (!(move in MOVE_DIR)) throw new Error('bad move ' + move);
+  const dir = MOVE_DIR[move];
+  const d = dir;
+  state = layer ? { r, c, d, layer } : { r, c, d };
   if (hasWall(level.walls, r, c, dir)) return { type: 'wall', state };
   const nr = r + DR[dir], nc = c + DC[dir];
   if (!inBoard(level, nr, nc)) return { type: 'off', state };
@@ -1805,13 +1816,11 @@ function isWin(level, state) {
 
 // Breadth-first search over (cell, dir, layer). Returns the shortest winning move list or null.
 function solve(level, maxLen = 16) {
-  // Shortest program; ties broken by fewest Back moves, then by F < L < R < B order.
-  const ORDER = 'FLRB';
+  // Shortest program; ties broken by U < R < D < L order. Facing doesn't affect movement, so states ignore it.
+  const ORDER = 'URDL';
   const start = { r: level.start[0], c: level.start[1], d: level.dir };
-  const key = s => s.r + ',' + s.c + ',' + s.d + (s.layer ? ',' + s.layer : '');
+  const key = s => s.r + ',' + s.c + (s.layer ? ',' + s.layer : '');
   const better = (a, b) => {
-    const ba = a.filter(m => m === 'B').length, bb = b.filter(m => m === 'B').length;
-    if (ba !== bb) return ba < bb;
     for (let k = 0; k < a.length; k++) if (a[k] !== b[k]) return ORDER.indexOf(a[k]) < ORDER.indexOf(b[k]);
     return false;
   };
@@ -1873,13 +1882,14 @@ if (typeof module !== 'undefined') module.exports = {
 const $ = id => document.getElementById(id);
 const STORE_KEY = 'getTheCheese.v1';
 const MOVES = {
-  F: { color: '#2f7fd8', icon: '\u2191' },
-  B: { color: '#e8c12e', icon: '\u2193' },
-  L: { color: '#f0873a', icon: '\u21BA' },
-  R: { color: '#8f5fd6', icon: '\u21BB' },
+  U: { color: '#2F7FD8', label: 'Up' },
+  D: { color: '#F0873A', label: 'Down' },
+  L: { color: '#8F5FD6', label: 'Left' },
+  R: { color: '#E8C12E', label: 'Right' },
 };
 const STEP_MS = 450;   // per tile (style guide v2)
-const TURN_MS = 350;   // 90-degree turn
+const TURN_MS = 350;   // 90-degree turn (title demo nibble)
+const FACE_MS = 120;   // v2.5: turn to face the move before stepping
 
 let S = 300;                 // canvas css size
 let levelIndex = 0;
@@ -1938,6 +1948,13 @@ function beep(freq, dur = 0.12, type = 'square') {
 function resetView() {
   const L = LEVELS[levelIndex];
   view = { row: L.start[0], col: L.start[1], angle: L.dir * Math.PI / 2, ox: 0, oy: 0 };
+}
+
+function faceAngle(from, d) {   // nearest angle to `from` that faces direction d
+  let a = d * Math.PI / 2;
+  while (a - from > Math.PI) a -= 2 * Math.PI;
+  while (from - a > Math.PI) a += 2 * Math.PI;
+  return a;
 }
 
 function wait(ms) { return new Promise(res => setTimeout(res, ms)); }
@@ -2016,7 +2033,8 @@ function renderProgram(active) {
     const card = document.createElement('button');
     card.className = 'card-step' + (i === active ? ' active' : '');
     card.style.background = MOVES[m].color;
-    card.textContent = MOVES[m].icon;
+    card.innerHTML = document.querySelector('[data-move="' + m + '"] svg').outerHTML;   // same arrow as the button
+    card.setAttribute('aria-label', MOVES[m].label);
     card.title = 'Tap to remove this step';
     card.setAttribute('aria-label', 'Remove step ' + (i + 1));
     card.disabled = running;
@@ -2114,16 +2132,14 @@ async function playProgram() {
     renderProgram(i);
     const m = moves[i];
     const res = step(L, state, m);
+    const ad = res.state.d;
+    if (ad !== ((Math.round(view.angle / (Math.PI / 2)) % 4) + 4) % 4) await animateTo(view.row, view.col, faceAngle(view.angle, ad), FACE_MS);
     if (res.type === 'wall' || res.type === 'off') {
-      const ad = m === 'B' ? (state.d + 2) % 4 : state.d;
       beep(res.type === 'wall' ? 180 : 260, 0.2, 'sawtooth');
       await bump(res.type, DR[ad], DC[ad]);
       break;
     }
-    if (res.type === 'turn') {
-      beep(440, 0.06);
-      await animateTo(view.row, view.col, view.angle + (m === 'L' ? -1 : 1) * Math.PI / 2, TURN_MS);
-    } else {
+    {
       beep(660, 0.06);
       view.layer = res.state.layer || state.layer;   // v0.5: keep the bridge layer while leaving or entering a bridge cell
       await animateTo(res.state.r, res.state.c, view.angle, STEP_MS);
@@ -2153,6 +2169,7 @@ document.querySelectorAll('[data-move]').forEach(b => {
   bindPress(b, () => {
     if (program.length >= MAX_PROGRAM) return;
     program.push(b.dataset.move);
+    b.classList.add('press'); setTimeout(() => b.classList.remove('press'), 100);
     beep(520, 0.06);
     renderAll();
   });
@@ -2194,8 +2211,8 @@ $('ov-btn').addEventListener('pointerdown', e => {
 
 
 // ---------------------------------------------------------------- v0.6 title screen (installHome drafted on Venice qwen3-coder)
-const DEMO = { name: 'Title', size: 3, start: [2, 0], dir: 0, cheese: [1, 1], walls: [] };
-let onHome = true, demoView = { row: 2, col: 0, angle: 0, ox: 0, oy: 0 }, demoSpin = 0, demoHop = 0, demoT = 0;
+const DEMO = { name: 'Title', size: 3, start: [0, 0], dir: 1, cheese: [1, 1], walls: [] };
+let onHome = true, demoView = { row: 0, col: 0, angle: Math.PI / 2, ox: 0, oy: 0 }, demoSpin = 0, demoHop = 0, demoT = 0;
 function tweenDemo(to, dur) {
   return new Promise(res => {
     const f = { row: demoView.row, col: demoView.col, angle: demoView.angle }, t0 = performance.now();
@@ -2204,22 +2221,25 @@ function tweenDemo(to, dur) {
       if (k < 1) requestAnimationFrame(fr); else res(); })(t0);
   });
 }
-async function demoLoop() {   // route F, F, R repeated round the edge; every 8 s stop at an edge middle and nibble the cheese
+async function demoLoop() {   // v2.5: arrow route Right, Right, Down, Down, Left, Left, Up, Up round the edge; every 8 s stop at an edge middle and nibble the cheese
   let lastNibble = performance.now();
+  const ROUTE = [1, 1, 2, 2, 3, 3, 0, 0];
   for (;;) {
-    if (!onHome) { await wait(300); continue; }
-    for (let k = 0; k < 2 && onHome; k++) {
-      const d = ((Math.round(demoView.angle / (Math.PI / 2)) % 4) + 4) % 4;
+    for (let k = 0; k < ROUTE.length; k++) {
+      while (!onHome) await wait(300);
+      const d = ROUTE[k];
+      const cur = ((Math.round(demoView.angle / (Math.PI / 2)) % 4) + 4) % 4;
+      if (cur !== d) await tweenDemo({ angle: faceAngle(demoView.angle, d) }, FACE_MS);
       await tweenDemo({ row: demoView.row + DR[d], col: demoView.col + DC[d] }, STEP_MS);
-      const atMid = Math.round(demoView.row) === 1 || Math.round(demoView.col) === 1;
-      if (atMid && performance.now() - lastNibble > 8000) {
+      const r = Math.round(demoView.row), c = Math.round(demoView.col);
+      if ((r === 1 || c === 1) && performance.now() - lastNibble > 8000) {
         lastNibble = performance.now(); const a = demoView.angle;
-        await tweenDemo({ angle: a + Math.PI / 2 }, TURN_MS);   // face the cheese in the middle
+        await tweenDemo({ angle: faceAngle(a, r === 1 ? (c === 0 ? 1 : 3) : (r === 0 ? 2 : 0)) }, TURN_MS);   // face the cheese in the middle
         for (let n = 0; n < 3; n++) { demoView.ox = 0.06; await wait(160); demoView.ox = 0; await wait(160); }
         await tweenDemo({ angle: a }, TURN_MS);
       }
+      await wait(60);
     }
-    if (onHome) await tweenDemo({ angle: demoView.angle + Math.PI / 2 }, TURN_MS);
   }
 }
 
@@ -2268,7 +2288,7 @@ renderAll();
 Renderer.init(document.getElementById('hero'), () => onHome
   ? { level: DEMO, view: demoView, celebrate: null, spin: demoSpin, hopY: demoHop, bg: 0xE9E5D8 }
   : { level: LEVELS[levelIndex], view, celebrate, spin: 0 });
-(function spin(now) { if (onHome) { if (demoT) demoSpin += Math.min(0.1, (now - demoT) / 1000) * 6 * Math.PI / 180; demoT = now; } else demoT = 0; requestAnimationFrame(spin); })(performance.now());
+// v2.5: the title board no longer spins (fixed at 0 deg yaw)
 const Home = installHome({
   levelCount: LEVELS.length,
   getCurrent: () => progress.current,
