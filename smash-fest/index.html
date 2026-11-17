@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Smash Fest</title>
+<link rel="icon" href="data:,">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;margin:0;overflow:hidden;touch-action:none;background:#BFE6FF;font-family:Arial,Helvetica,sans-serif}
+canvas{display:block;width:100%;height:100%;touch-action:none;outline:none}
+#counter{position:fixed;right:max(18px,env(safe-area-inset-right));top:max(18px,env(safe-area-inset-top));padding:12px 22px;background:#202B50;color:white;border-radius:40px;font-size:clamp(16px,3.6vmin,30px);font-weight:800;box-shadow:0 5px 0 #17213a24;pointer-events:none;user-select:none}
+#retry{position:fixed;left:50%;top:44%;transform:translate(-50%,-50%);padding:21px 34px;border-radius:28px;background:white;color:#202B50;box-shadow:0 10px 35px #202b5026;font-size:clamp(24px,5vmin,42px);font-weight:800;white-space:nowrap;pointer-events:none;display:none}
+</style>
+</head>
+<body>
+<div id="counter">Balls <span id="balls">20</span></div>
+<div id="retry">Try again</div>
+<script src="vendor/three.min.js?v=1"></script>
+<script src="vendor/cannon-es/cannon-es.global.js?v=1"></script>
+<script src="game.js?v=3"></script>
+</body>
+</html>
