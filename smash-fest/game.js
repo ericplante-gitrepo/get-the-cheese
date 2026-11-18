@@ -18,11 +18,22 @@ const scene = new THREE.Scene();
 scene.fog = new THREE.Fog(0xBFE6FF, 60, 155);
 const camera = new THREE.PerspectiveCamera(50, 1, 0.08, 240);
 scene.add(camera);
-const renderer = new THREE.WebGLRenderer({antialias: true, alpha: false});
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+// Software rasterisers (SwiftShader, llvmpipe: no-GPU tablets, CI) get a lighter path so they hold 30 fps:
+// no MSAA, plain PCF shadows. Real GPUs keep antialiasing and soft shadows.
+const softwareGL = (() => {
+  try {
+    const gl = document.createElement('canvas').getContext('webgl');
+    const ext = gl && gl.getExtension('WEBGL_debug_renderer_info');
+    const name = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : '';
+    if (gl && gl.getExtension('WEBGL_lose_context')) gl.getExtension('WEBGL_lose_context').loseContext();
+    return /swiftshader|llvmpipe|software/i.test(name);
+  } catch (err) { return false; }
+})();
+const renderer = new THREE.WebGLRenderer({antialias: !softwareGL, alpha: false});
+renderer.setPixelRatio(softwareGL ? 1 : Math.min(window.devicePixelRatio || 1, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = softwareGL ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
 document.body.prepend(renderer.domElement);
 renderer.domElement.setAttribute('aria-label', 'Smash Fest. Tap a tower block to fire.');
 const world = new C.World({gravity: new C.Vec3(0, -9.82, 0), allowSleep: true});
@@ -32,7 +43,7 @@ world.solver.tolerance = 0.0001;
 world.defaultContactMaterial.friction = 0.3;
 world.defaultContactMaterial.restitution = 0.02;
 const physicsMaterials = {};
-['ice', 'wood', 'candy', 'support', 'plank', 'ground', 'ball'].forEach(name => {
+['ice', 'wood', 'candy', 'gold', 'support', 'plank', 'ground', 'ball'].forEach(name => {
   physicsMaterials[name] = new C.Material(name);
 });
 function contact(a, b, friction, restitution) {
@@ -51,6 +62,7 @@ contact('wood', 'wood', 0.5, 0.02);
 contact('candy', 'candy', 0.3, 0.45);
 contact('candy', 'wood', 0.3, 0.45);
 contact('ice', 'wood', 0.08, 0.05);
+for (const other of ['support', 'plank', 'wood', 'candy']) contact('gold', other, 0.3, 0.2);
 contact('plank', 'ground', 0.15, 0.01);
 contact('ball', 'ground', 0.35, 0.25);
 function material(color, extra) {
@@ -63,10 +75,10 @@ const mats = {
   wood: material(0xffffff, {vertexColors: true}),
   candy: material(0xffffff, {vertexColors: true}),
   support: material(0xE89A4B), plank: material(0xFF8A3D),
-  navy: material(0x202B50), cream: material(0xF2EBDD),
+  navy: material(0x202B50), cream: material(0xD8D0C3), // top face renders as ~#F2EBDD under the key light
   side: material(0xC9B79C), grass: material(0x7BC86C),
   patch: material(0x5AA84F), blue: material(0x2F7FD8),
-  yellow: material(0xFFC845),
+  yellow: material(0xFFC845), gold: material(0xFFC845, {emissive: 0x6B4A00, emissiveIntensity: 0.15}),
   ball: material(0x6B7280, {emissive: 0xD1D5DB, emissiveIntensity: 0.12})
 };
 // three r159 uses physical light units (no legacy x PI), so camera-facing faces need about PI of
@@ -116,7 +128,7 @@ function woodGeometry(w, h, d) {
   if (woodCache.has(key)) return woodCache.get(key);
   const pieces = [];
   const base = new THREE.BoxGeometry(w, h, d).toNonIndexed();
-  pieces.push({g: base, c: 0xE89A4B});
+  pieces.push({g: base, c: 0xF2A04E}); // a touch above #E89A4B: grain shading pulls the face sample down
   for (let i = 0; i < 5; i++) {
     const y = -h * 0.36 + h * 0.18 * i;
     const g = new THREE.BoxGeometry(w * (0.67 + 0.04 * (i % 3)), Math.min(0.018, h * 0.035), d + 0.003).toNonIndexed();
@@ -177,15 +189,18 @@ function decoration(geometry, mat, x, y, z, sx, sy, sz, parent) {
 }
 const scenery = new THREE.Group();
 scene.add(scenery);
-const bgPink = material(0xDFBBD1), bgPurple = material(0xC5B7D8);
+// Castles: style-guide pink / lilac at 85% value so the blocks stay >= 25% brighter (Art Director, b6c994b check)
+const bgPink = material(0xD28FB8), bgPurple = material(0xAA8ACC);
+const bgPinkRoof = material(0xB77194); // roof cones tilt toward the sun; pre-darkened to match the walls
+const castleMeshes = [], tentMeshes = [];
 const bgGreen = material(0x78AF83), bgTrunk = material(0xAE947E);
 const bgRed = material(0xE9A5A3), bgWhite = material(0xF8F3EB);
 for (let side = -1; side <= 1; side += 2) {
   const x = side * 29, z = -27;
   decoration(unitBox, side < 0 ? bgPink : bgPurple, x, 2.2, z, 6, 4.4, 4);
   for (let j = -1; j <= 1; j += 2) {
-    decoration(cylinderGeo, bgPurple, x + j * 3, 3, z, 1.2, 6, 1.2);
-    decoration(coneGeo, bgPink, x + j * 3, 7, z, 1.65, 2, 1.65);
+    castleMeshes.push(decoration(cylinderGeo, bgPurple, x + j * 3, 3, z, 1.2, 6, 1.2));
+    castleMeshes.push(decoration(coneGeo, bgPinkRoof, x + j * 3, 7, z, 1.65, 2, 1.65));
   }
   for (let j = 0; j < 3; j++) {
     const tx = side * (19 + j * 8), tz = -15 - j * 9;
@@ -195,12 +210,13 @@ for (let side = -1; side <= 1; side += 2) {
   const tent = new THREE.ConeGeometry(3.2, 4.2, 12).toNonIndexed();
   const tc = [];
   for (let v = 0; v < tent.attributes.position.count; v++) {
-    const c = new THREE.Color(Math.floor(v / 3) % 2 ? 0xFFFFFF : 0xFF6B6B);
+    // r159 cone torso = 6 verts per segment (a zero-area apex triangle + the visible face), so stripe by segment
+    const c = new THREE.Color(Math.floor(v / 6) % 2 ? 0xFFFFFF : 0xFF6B6B);
     c.lerp(new THREE.Color(0xD9D5CC), 0.3);
     tc.push(c.r, c.g, c.b);
   }
   tent.setAttribute('color', new THREE.Float32BufferAttribute(tc, 3));
-  decoration(tent, material(0xffffff, {vertexColors: true}), side * 23, 2.1, -6, 1, 1, 1);
+  tentMeshes.push(decoration(tent, material(0xffffff, {vertexColors: true}), side * 23, 2.1, -6, 1, 1, 1));
 }
 for (let i = 0; i < 3; i++) {
   const x = [-26, 28, 36][i], y = [12, 15, 10][i], z = -35 - i * 3;
@@ -233,7 +249,8 @@ function resize() {
   renderer.setSize(w, h);
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
-  const scale = 2 * 2.3 * Math.tan(THREE.MathUtils.degToRad(25)) * 0.14 / 0.9;
+  const CANNON_SHARE = 0.125; // measured silhouette ~16% of screen height (style guide cap: 18%)
+  const scale = 2 * 2.3 * Math.tan(THREE.MathUtils.degToRad(25)) * CANNON_SHARE / 0.9;
   cannonRig.scale.setScalar(scale);
   cannonBaseY = -2.3 * Math.tan(THREE.MathUtils.degToRad(25)) + 0.045 + 0.14 * scale;
   cannonRig.position.set(0, cannonBaseY, -2.3);
@@ -356,12 +373,20 @@ function box(t, type, x, y, z, w, h, d, target, isStatic) {
   if (type === 'ice') {
     mesh = makeMesh(iceGeo, mats.ice, true);
     mesh.add(new THREE.LineSegments(iceEdges, edgeMat));
+    if (w !== 1 || h !== 1 || d !== 1) mesh.scale.set(w, h, d); // iceGeo is a 1 m bevelled cube
   } else if (type === 'wood') {
     mesh = makeMesh(woodGeometry(w, h, d), mats.wood, true);
   } else {
     mesh = makeMesh(new THREE.BoxGeometry(w, h, d), mats[type], true);
   }
   return addEntity(t, mesh, body, type, target, type === 'support' || type === 'plank');
+}
+// Gold pyramid (tower 7 crown): medium weight like candy, never breaks; square pyramid on a box body.
+const goldGeo = new THREE.ConeGeometry(0.62, 0.8, 4, 1); goldGeo.rotateY(Math.PI / 4);
+function gold(t, x, y) {
+  const body = new C.Body({mass: 1.5 * 0.85 * 0.8 * 0.85 / 3, material: physicsMaterials.gold,
+    position: new C.Vec3(x, y, t.z), shape: new C.Box(new C.Vec3(0.43, 0.4, 0.43))});
+  return addEntity(t, makeMesh(goldGeo, mats.gold, true), body, 'gold', true, false);
 }
 function candy(t, x, y) {
   const body = new C.Body({
@@ -414,6 +439,36 @@ const TOWERS = [
     for (let i = 0; i < 3; i++) box(t, 'wood', 0, top + 0.505 + i * 1.005, 0, 1, 1, 1, true, false);
     box(t, 'wood', 0, top + 3.14, 0, 4, 0.25, 0.9, true, false);
     [-1.5, 1.5].forEach(x => box(t, 'wood', x, top + 3.77, 0, 1, 1, 1, true, false));
+  }},
+  {balls: 23, build(t) { // 4: ice arch on a seesaw (two ice columns, an ice lintel, a keystone cube)
+    const top = seesaw(t);
+    [-2, 2].forEach(x => { box(t, 'ice', x, top + 0.505, 0, 1, 1, 1, true, false); box(t, 'ice', x, top + 1.51, 0, 1, 1, 1, true, false); });
+    box(t, 'ice', 0, top + 2.27, 0, 5, 0.5, 1, true, false);
+    box(t, 'ice', 0, top + 3.03, 0, 1, 1, 1, true, false);
+  }},
+  {balls: 24, build(t) { // 5: tall narrow candy tower with gaps, on a seesaw
+    const top = seesaw(t);
+    for (let lv = 0; lv < 4; lv++) {
+      const y0 = top + lv * 1.255;
+      [-0.55, 0.55].forEach(x => candy(t, x, y0 + 0.505));
+      box(t, 'wood', 0, y0 + 1.13, 0, 1.7, 0.25, 0.9, true, false);
+    }
+  }},
+  {balls: 20, build(t) { // 6: tall wood frame (pillars and crossbeams) on a seesaw
+    const top = seesaw(t);
+    [-1.5, 1.5].forEach(x => box(t, 'wood', x, top + 1.005, 0, 0.3, 2, 0.3, true, false));
+    box(t, 'wood', 0, top + 2.135, 0, 3.6, 0.25, 0.6, true, false);
+    [-1.1, 1.1].forEach(x => box(t, 'wood', x, top + 3.265, 0, 0.3, 2, 0.3, true, false));
+    box(t, 'wood', 0, top + 4.395, 0, 2.8, 0.25, 0.6, true, false);
+    box(t, 'wood', 0, top + 5.025, 0, 1, 1, 1, true, false);
+  }},
+  {balls: 20, build(t) { // 7: mixed tower on a static base, gold pyramid on top
+    box(t, 'support', 0, 1.2, 0, 3.2, 1.2, 1.6, false, true);
+    [-1, 0, 1].forEach(x => box(t, 'ice', x, 2.305, 0, 1, 1, 1, true, false));
+    box(t, 'wood', 0, 2.94, 0, 3.2, 0.25, 0.9, true, false);
+    [-1, 0, 1].forEach(x => candy(t, x, 3.575));
+    box(t, 'wood', 0, 4.21, 0, 2.8, 0.25, 0.9, true, false);
+    gold(t, 0, 4.74);
   }}
 ];
 function makeTower(index, track) {
@@ -486,12 +541,14 @@ function queueRemove(e, effect) {
   if (e.removed || e.queued) return;
   e.queued = true; removalQueue.push({e, effect});
 }
+const breakStats = {};
 function removeTarget(e, effect) {
   if (e.removed) return;
   const p = e.body.position, x = p.x, y = p.y, z = p.z;
   e.removed = true;
   world.removeBody(e.body);
   e.mesh.visible = false;
+  const k = e.type + ':' + effect; breakStats[k] = (breakStats[k] || 0) + 1; // test-only tally, e.g. 'ice:ice', 'candy:pop'
   if (effect === 'ice') {
     puff(x, y, z);
     const count = 6 + Math.floor(random() * 3);
@@ -533,7 +590,7 @@ function destroyTower(t) {
   t.entities.forEach(e => {
     if (!e.removed) world.removeBody(e.body);
     const g = e.mesh.geometry;
-    if (g !== iceGeo && g !== candyGeo && !Array.from(woodCache.values()).includes(g)) g.dispose();
+    if (g !== iceGeo && g !== candyGeo && g !== goldGeo && !Array.from(woodCache.values()).includes(g)) g.dispose();
   });
   scene.remove(t.group);
 }
@@ -666,11 +723,46 @@ function computeFitBox(t) {
   box.expandByScalar(0.4);
   t.fitBox = box; t.fitKey = null;
 }
-// Drop-in height (<= 4 m) that keeps the falling blocks inside the frame from the tower's final camera pose.
-function dropHeight(t) {
-  const d = cameraDistance(t);
-  for (let h = 4; h > 0; h -= 0.25) if (fitsAt(fitPoints(t.fitBox, false, h), d, 0.95)) return h;
-  return 0;
+// Flight plan: pick the highest arc (<= 6 m) and drop-in height (<= 4 m) that keep the incoming tower
+// (including its lifted blocks) inside the frame at every moment of the 1.7 s camera move.
+const flightPos = new THREE.Vector3(), flightA = new THREE.Vector3(), flightB = new THREE.Vector3();
+function flightPose(cur, inc, u, arc, outPos) { // camera pose at move fraction u, relative to inc.z
+  const s = smooth(u);
+  cameraPose(cur, flightA); cameraPose(inc, flightB);
+  outPos.lerpVectors(flightA, flightB, s); outPos.y += Math.sin(Math.PI * u) * arc; outPos.z -= inc.z;
+  return THREE.MathUtils.lerp(cur.z, inc.z, s) - inc.z; // look-at z, relative
+}
+function dropAt(h, u) { const remaining = 1.7 * (1 - u); return remaining > 0.5 ? h : h * (1 - smooth(1 - remaining / 0.5)); }
+function viewFits(pts, pos, lookZ) {
+  fitCam.aspect = camera.aspect; fitCam.updateProjectionMatrix();
+  fitCam.position.copy(pos); fitCam.lookAt(0, 2.5, lookZ); fitCam.updateMatrixWorld(true);
+  for (const p of pts) {
+    fitV.copy(p).project(fitCam);
+    if (!Number.isFinite(fitV.x) || fitV.z < -1 || fitV.z > 1) return false; // outside the near/far range
+    if (Math.abs(fitV.x) > 0.98 || fitV.y > 0.97) return false; // bottom may run under the cannon mid-move
+  }
+  return true;
+}
+const flightPlans = new Map(); // cached per (from tower, to tower, aspect): the search runs once per pair
+function planFlight(cur, inc) {
+  const key = cur.index + '>' + inc.index + '@' + camera.aspect.toFixed(4) + ':' + cameraDistance(cur) + ',' + cameraDistance(inc);
+  if (!flightPlans.has(key)) flightPlans.set(key, searchFlight(cur, inc));
+  return flightPlans.get(key);
+}
+function searchFlight(cur, inc) {
+  for (const arc of [6, 5, 4, 3, 2, 1, 0]) {
+    for (let h = 4; h >= 0; h -= 0.5) {
+      let ok = true;
+      const full = fitPoints(inc.fitBox, false, h);
+      for (let u = 0; u <= 1.0001 && ok; u += 0.04) {
+        const uu = Math.min(1, u), lift = dropAt(h, uu);
+        const lookZ = flightPose(cur, inc, uu, arc, flightPos);
+        ok = viewFits(lift === h ? full : fitPoints(inc.fitBox, false, lift), flightPos, lookZ);
+      }
+      if (ok) return {arc, drop: h};
+    }
+  }
+  return {arc: 0, drop: 0};
 }
 function cameraPose(t, out) {
   out.set(0, 3.6, t.z + cameraDistance(t));
@@ -685,7 +777,7 @@ function updateCamera() {
     const t = Math.min(1, transition.time / 1.7), s = smooth(t);
     cameraPose(current, camStart); cameraPose(incoming, camEnd);
     camera.position.lerpVectors(camStart, camEnd, s);
-    camera.position.y += Math.sin(Math.PI * t) * 6;
+    camera.position.y += Math.sin(Math.PI * t) * (transition.arc ?? 6);
     z = THREE.MathUtils.lerp(current.z, incoming.z, s);
   } else cameraPose(current, camera.position);
   lookPoint.set(0, 2.5, z);
@@ -710,7 +802,8 @@ function updateTransition(dt) {
   if (transition.time >= -1e-8 && !incoming) {
     transition.time = Math.max(0, transition.time);
     incoming = makeTower((current.index + 1) % TOWERS.length, ++serial);
-    incoming.dropMax = dropHeight(incoming);
+    const plan = planFlight(current, incoming);
+    transition.arc = plan.arc; incoming.dropMax = plan.drop;
     incoming.drop = incoming.dropMax;
     incoming.entities.forEach(e => syncEntity(e, incoming.drop));
   }
@@ -815,7 +908,7 @@ window.__test = {
       tower: current.index + 1, towerCount: TOWERS.length, balls,
       blocksOnSupport: current.targets.reduce((n, e) => n + (isDown(e) ? 0 : 1), 0),
       targetsTotal: current.targets.length, phase, clears, retries,
-      ballsInFlight: shots.length,
+      ballsInFlight: shots.length, breaks: Object.assign({}, breakStats),
       lastShot: lastShot ? {from: Object.assign({}, lastShot.from), to: Object.assign({}, lastShot.to)} : null
     };
   },
@@ -841,9 +934,11 @@ window.__test = {
   },
   seed(n) { random = mulberry32(Number(n) >>> 0); },
   goto: gotoTower,
+  flightPlan() { return transition ? {arc: transition.arc, drop: incoming && incoming.dropMax} : null; },
   forceClear() { if (phase === 'play') beginClear(); }
 };
 window.__game = {
+  castleMeshes, tentMeshes, cannonRig, softwareGL,
   scene, camera, renderer, world, TOWERS, SHOT_IMPULSE,
   get current() { return current; },
   get incoming() { return incoming; },
