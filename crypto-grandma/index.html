@@ -5,47 +5,52 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>A simple guide to Bitcoin and crypto</title>
   <style>
+    /* Style guide v2 "Quiet Premium". System fonts only, nothing is fetched. */
     :root {
-      --page: #FBF7F0;
+      --page: #F6F5F2;
       --card: #FFFFFF;
-      --border: #D9D2C5;
-      --text: #1F2430;
-      --muted: #4A5160;
-      --primary: #1A4F8C;
-      --primary-border: #0F3D73;
+      --hairline: #E3E1DC;
+      --field-border: #767B85;
+      --ink: #0E1116;
+      --ink-2: #3D4350;
+      --primary: #0E1116;
+      --primary-press: #2A2F38;
       --on-primary: #FFFFFF;
-      --correct-bg: #E6F3EA;
-      --correct-text: #165C30;
-      --wrong-bg: #F8E6E2;
-      --wrong-text: #8A2A1F;
-      --caution-bg: #FFF1D6;
-      --caution-text: #643C00;
-      --caution-bar: #E0A030;
-      --focus: #F2A900;
-      --bitcoin: #E8912D;
-      --bar-track: #D9D2C5;
-      --bar-fill: #1A4F8C;
-      --space: 1.5rem;
-      --max: 42.5rem;
+      --accent: #2A1FB8;
+      --accent-soft: #EEEBFF;
+      --gain-text: #06552D;
+      --gain-bg: #E3F4EA;
+      --down-text: #3D4350;
+      --down-bg: #ECEDEF;
+      --error-text: #8A2A1F;
+      --error-bg: #FBE9E5;
+      --caution-text: #6B4300;
+      --caution-bg: #FFF3D9;
+      --caution-bar: #B07A1A;
+      --bitcoin: #C46A12;
+      --ether: #6B6F80;
+      --track: #ECEDEF;
+      --shadow: 0 1px 2px rgba(14, 17, 22, 0.06), 0 8px 24px rgba(14, 17, 22, 0.06);
+      --radius-card: 20px;
+      --radius-ctl: 14px;
+      --ease: 180ms ease-out;
+      --max: 40rem;
     }
 
     *, *::before, *::after { box-sizing: border-box; }
 
-    html {
-      font-size: 100%;
-      -webkit-text-size-adjust: 100%;
-    }
+    html { font-size: 100%; -webkit-text-size-adjust: 100%; }
 
     body {
       margin: 0;
       min-height: 100vh;
       min-height: 100dvh;
       background: var(--page);
-      color: var(--text);
-      font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      color: var(--ink);
+      font-family: "Inter", "Helvetica Neue", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
       font-size: 1.375rem;
       font-weight: 400;
-      line-height: 1.55;
+      line-height: 1.5;
     }
 
     @media (max-width: 30rem) {
@@ -53,6 +58,9 @@
     }
 
     img, svg { max-width: 100%; height: auto; display: block; }
+
+    h1, h2, p { margin: 0; }
+    p, li, h1, h2, .gain, .stat-label, .overline, .lesson-kicker { overflow-wrap: anywhere; }
 
     button {
       font: inherit;
@@ -63,22 +71,28 @@
       color: inherit;
       background: none;
       border: 0;
-      border-radius: 0.75rem;
+      border-radius: var(--radius-ctl);
       padding: 0.75rem 1.25rem;
+      -webkit-tap-highlight-color: transparent;
     }
 
     button:focus-visible,
-    a:focus-visible {
-      outline: 0.25rem solid var(--focus);
-      outline-offset: 0.125rem;
+    a:focus-visible,
+    .dollar-input:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
     }
 
+    @media (prefers-reduced-motion: no-preference) {
+      button, .tab, .range-btn { transition: background-color var(--ease), border-color var(--ease), color var(--ease), box-shadow var(--ease); }
+      .progress-bar > span { transition: width 200ms ease-out; }
+    }
+
+    /* ---------- frame ---------- */
     .shell {
       max-width: var(--max);
       margin: 0 auto;
-      padding: var(--space);
-      min-height: 100vh;
-      min-height: 100dvh;
+      padding: 1rem 1.25rem;
       height: 100vh;
       height: 100dvh;
       display: flex;
@@ -86,465 +100,337 @@
       overflow: hidden;
     }
 
-    #app {
-      flex: 1;
-      min-height: 0;
-      display: flex;
-      flex-direction: column;
+    @media (min-width: 48rem) {
+      .shell { padding: 1.5rem 2rem; }
+      /* the 5-column holdings table needs about 620px of room (deviation from the 40rem column) */
+      .shell.shell-wide { max-width: 48rem; }
+      .app-header { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+      .app-header .subtitle { margin: 0; }
     }
 
-    .chrome-top {
-      flex-shrink: 0;
-      background: var(--page);
-    }
+    #app { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+
+    .app-header { flex-shrink: 0; margin: 0 0 0.5rem; }
+    .brand { display: flex; align-items: center; gap: 0.75rem; }
+    .brand-mark { flex: none; width: 12px; height: 12px; background: var(--accent); border-radius: 3px; }
+    .app-header h1 { font-size: 1.25rem; font-weight: 700; line-height: 1.25; color: var(--ink); }
+    .subtitle { margin: 0.25rem 0 0 calc(12px + 0.75rem); color: var(--ink-2); font-size: 1.25rem; font-weight: 400; line-height: 1.3; }
+
+    .chrome-top { flex-shrink: 0; background: var(--page); }
 
     .pane {
       flex: 1;
       min-height: 0;
       overflow: auto;
-      padding-bottom: 1rem;
+      /* room inside the scroller so card shadows are not clipped */
+      margin: 0 -0.75rem;
+      padding: 0.25rem 0.75rem 1rem;
     }
 
-    .banner {
-      text-align: center;
-      margin: 0 0 1.25rem;
-    }
+    main { display: flex; flex-direction: column; }
 
-    .banner h1 {
-      margin: 0 0 0.4rem;
-      font-size: 2rem;
-      font-weight: 700;
-      line-height: 1.25;
-    }
-
-    @media (max-width: 30rem) {
-      .banner h1 { font-size: 1.625rem; }
-    }
-
-    .subtitle {
-      margin: 0;
-      color: var(--muted);
-      font-size: 1.125rem;
+    /* ---------- type ---------- */
+    .overline {
+      margin: 0 0 0.25rem;
+      color: var(--ink-2);
+      font-size: 1.25rem;
       font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      line-height: 1.3;
     }
 
-    @media (max-width: 30rem) {
-      .subtitle { font-size: 1.125rem; }
+    .stat-label, .field-label { color: var(--ink-2); font-size: 1.25rem; font-weight: 600; line-height: 1.3; }
+    .field-label { display: block; margin: 0 0 0.5rem; color: var(--ink); }
+    .stat-label { margin: 0 0 0.25rem; }
+
+    h2.wallet-h, .section-h {
+      margin: 0 0 1rem;
+      font-size: 1.5rem;
+      font-weight: 650;
+      line-height: 1.25;
+      color: var(--ink);
+    }
+    @media (min-width: 30.0625rem) { h2.wallet-h, .section-h { font-size: 1.625rem; } }
+    .pane > h2.wallet-h:not(:first-child) { margin-top: 1.5rem; }
+
+    .money { font-weight: 700; font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+    .money-lg { font-size: 2.5rem; line-height: 1.1; letter-spacing: -0.02em; }
+    @media (min-width: 30.0625rem) { .money-lg { font-size: 3rem; } }
+    .money-md { font-size: 1.75rem; line-height: 1.2; letter-spacing: -0.01em; }
+    @media (max-width: 22rem) {
+      .money-lg { font-size: clamp(1.25rem, 9.5vw, 2.5rem); }
+      .money-md { font-size: 1.375rem; }
     }
 
-    main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
+    .updated, .price-line, .stat-note { margin: 0.5rem 0 0; color: var(--ink-2); font-size: 1.25rem; font-weight: 400; }
+    .stat-note { font-weight: 600; margin: 0; }
+    .price-line { font-weight: 600; font-variant-numeric: tabular-nums; }
 
-    .how {
-      margin: 0 0 1.5rem;
-      color: var(--muted);
-      max-width: 60ch;
+    /* ---------- cards ---------- */
+    .card, .hold-card, .lesson-card, .wallet-entry, .history, .caution, .chart-empty {
+      background: var(--card);
+      border: 1px solid var(--hairline);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow);
     }
+    .card, .hold-card { padding: 1.5rem; margin: 0 0 1rem; }
+    @media (max-width: 20rem) { .card, .hold-card { padding: 0.75rem; } }
+    .card > :last-child, .hold-card > :last-child { margin-bottom: 0; }
+    .card + .card, .hold-card + .hold-card { margin-top: 0; }
+    .card-split { border-top: 1px solid var(--hairline); margin: 1.5rem 0 0; padding: 1.5rem 0 0; }
 
-    .lesson-list {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
+    .hold-card p { margin: 0 0 0.5rem; }
+    .hold-card p:last-child { margin-bottom: 0; }
+    .hold-card .coin-line { display: flex; align-items: center; gap: 0.75rem; font-weight: 600; margin: 0 0 0.5rem; }
 
-    .lesson-card {
+    .dot { flex: none; display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: var(--ink-2); }
+    .dot-btc { background: var(--bitcoin); }
+    .dot-eth { background: var(--ether); }
+    .dot-cash { background: var(--accent); }
+
+    /* ---------- home ---------- */
+    .how { margin: 0 0 1.5rem; color: var(--ink-2); max-width: 34em; }
+
+    .lesson-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1rem; }
+
+    .lesson-card, .wallet-entry {
       display: block;
       width: 100%;
       text-align: left;
-      background: var(--card);
-      border: 2px solid var(--border);
-      padding: 1.1rem 1.25rem;
+      padding: 1.5rem;
       min-height: 4rem;
+      color: var(--ink);
+      font-weight: 400;
     }
-
-    .lesson-card:hover { border-color: var(--primary); }
+    .lesson-card:hover { border-color: var(--field-border); }
 
     .lesson-kicker {
       display: block;
-      color: var(--muted);
-      font-size: 1.125rem;
+      margin: 0 0 0.25rem;
+      color: var(--ink-2);
+      font-size: 1.25rem;
       font-weight: 600;
-      margin-bottom: 0.2rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      line-height: 1.3;
+    }
+    .lesson-title { display: block; font-size: 1.375rem; font-weight: 700; line-height: 1.3; letter-spacing: -0.01em; }
+    .lesson-status { display: block; margin-top: 0.5rem; color: var(--ink-2); font-size: 1.25rem; font-weight: 600; }
+
+    /* ---------- lesson list (style guide v2, "Lesson list") ---------- */
+    .progress-card { padding: 1.25rem; margin: 0 0 1.5rem; }
+    .progress-card .progress-label { margin: 0 0 0.75rem; color: var(--ink); font-size: 1.25rem; font-weight: 600; }
+    .group { margin: 0 0 1.5rem; }
+    .group-label { margin: 0 0 0.75rem; color: var(--ink-2); font-size: 1.25rem; font-weight: 600; letter-spacing: 0.06em; line-height: 1.3; text-transform: uppercase; }
+    .lesson-card {
+      display: grid;
+      grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+      align-items: center;
+      column-gap: 1rem;
+      min-height: 4.5rem;
+      padding: 1rem 1.25rem;
+      border-radius: 16px;
+      box-shadow: none;
+      cursor: pointer;
+    }
+    .lesson-card.is-next { border: 2px solid var(--accent); padding: calc(1rem - 1px) calc(1.25rem - 1px); }
+    .lesson-card .num {
+      display: flex; align-items: center; justify-content: center;
+      width: 2.5rem; height: 2.5rem; border-radius: 50%;
+      background: var(--accent-soft); color: var(--accent);
+      font-size: 1.25rem; font-weight: 700; line-height: 1;
+    }
+    .lesson-card.is-done .num { background: var(--gain-bg); color: var(--gain-text); }
+    .lesson-card .lesson-title { font-size: 1.25rem; font-weight: 600; line-height: 1.3; letter-spacing: 0; color: var(--ink); }
+    .lesson-card .lesson-status { margin-top: 0.125rem; font-size: 1.25rem; font-weight: 400; line-height: 1.3; }
+    .lesson-card.is-done .lesson-status { color: var(--gain-text); font-weight: 600; }
+    .lesson-card .chev { color: var(--ink-2); font-size: 1.25rem; line-height: 1; }
+    .lesson-card .chip {
+      display: inline-block; margin-top: 0.5rem; padding: 0.125rem 0.75rem; border-radius: 999px;
+      background: var(--accent-soft); color: var(--accent); font-size: 1.25rem; font-weight: 700; line-height: 1.4;
+    }
+    @media (min-width: 30rem) { .lesson-card .lesson-title { font-size: 1.375rem; line-height: 1.25; } }
+    @media (max-width: 20rem) {
+      .lesson-card { column-gap: 0.5rem; padding: 0.75rem; }
+      .lesson-card.is-next { padding: calc(0.75rem - 1px); }
     }
 
-    .lesson-title {
-      display: block;
-      font-size: 1.375rem;
-      font-weight: 700;
-    }
+    .wallet-entry { margin: 0 0 1.5rem; background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+    .wallet-entry:hover { background: var(--primary-press); }
+    .wallet-entry .lesson-kicker { color: #D9DCE3; }
+    .wallet-entry .lesson-title { color: var(--on-primary); }
 
-    .lesson-status {
-      display: block;
-      margin-top: 0.35rem;
-      font-size: 1.125rem;
-      font-weight: 600;
-      color: var(--muted);
-    }
+    /* ---------- lessons ---------- */
+    .progress-wrap { margin: 0 0 1.25rem; }
+    .progress-label { margin: 0 0 0.5rem; color: var(--ink-2); font-size: 1.25rem; font-weight: 600; }
+    .progress-bar { height: 8px; background: var(--track); border-radius: 999px; overflow: hidden; }
+    .progress-bar > span { display: block; height: 100%; background: var(--accent); width: 0; border-radius: 999px; }
 
-    .progress-wrap {
-      margin: 0 0 1.25rem;
-    }
-
-    .progress-label {
-      margin: 0 0 0.5rem;
-      font-weight: 600;
-      color: var(--muted);
-      font-size: 1.125rem;
-    }
-
-    .progress-bar {
-      height: 0.75rem;
-      background: var(--bar-track);
-      border-radius: 999px;
-      overflow: hidden;
-    }
-
-    .progress-bar > span {
-      display: block;
-      height: 100%;
-      background: var(--bar-fill);
-      width: 0;
-    }
-
-    @media (prefers-reduced-motion: no-preference) {
-      .progress-bar > span { transition: width 200ms ease; }
-    }
-
-    .top-row {
-      display: flex;
-      justify-content: flex-start;
-      margin: 0 0 1rem;
-    }
+    .top-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; margin: 0 0 0.5rem; }
 
     .btn-back {
       min-height: 3.5rem;
       min-width: 3.5rem;
-      padding: 0.5rem 1rem;
+      padding: 0.5rem 1.25rem;
       background: var(--card);
-      color: var(--primary);
-      border: 2px solid var(--primary);
+      color: var(--accent);
+      border: 2px solid var(--field-border);
     }
 
-    .screen-text {
-      max-width: 60ch;
-      margin: 0 0 1rem;
-    }
-
+    .screen-text { max-width: 34em; margin: 0 0 1rem; }
+    .card > .screen-text { margin: 0; }
     .screen-text p { margin: 0 0 0.8rem; }
     .screen-text p:last-child { margin-bottom: 0; }
+    .card.screen-text { max-width: none; padding: 1.5rem; }
+    .card.screen-text p { max-width: 34em; }
 
-    .illustration {
-      width: 7.5rem;
-      margin: 0 0 1.25rem;
-    }
-
+    .illustration { width: 7.5rem; margin: 0 0 1.25rem; }
     .illustration svg { width: 100%; height: auto; }
 
     .caution {
       background: var(--caution-bg);
       color: var(--caution-text);
+      border: 1px solid var(--hairline);
       border-left: 4px solid var(--caution-bar);
-      padding: 1rem 1.15rem;
-      border-radius: 0 0.75rem 0.75rem 0;
-      max-width: 60ch;
+      padding: 1.5rem;
+      box-shadow: none;
     }
+    .caution .kicker { margin: 0 0 0.5rem; font-weight: 700; font-size: 1.25rem; }
+    .caution .screen-text { margin: 0; color: var(--caution-text); max-width: 34em; }
 
-    .caution .kicker {
-      margin: 0 0 0.4rem;
-      font-weight: 700;
-      font-size: 1.125rem;
-    }
+    .quiz-q { margin: 0 0 1rem; font-size: 1.5rem; font-weight: 650; line-height: 1.3; letter-spacing: -0.01em; max-width: 34em; }
+    @media (min-width: 30.0625rem) { .quiz-q { font-size: 1.625rem; } }
 
-    .caution .screen-text { margin: 0; color: var(--caution-text); }
-
-    .quiz-q {
-      margin: 0 0 0.85rem;
-      font-size: 1.625rem;
-      font-weight: 700;
-      line-height: 1.3;
-      max-width: 60ch;
-    }
-    @media (max-width: 30rem) {
-      .quiz-q { font-size: 1.375rem; }
-    }
-
-    .options {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      margin: 0 0 1.25rem;
-    }
+    .options, .coin-pick { display: flex; flex-direction: column; gap: 0.75rem; margin: 0 0 1.25rem; }
 
     .option {
       width: 100%;
       min-height: 4rem;
       text-align: left;
       background: var(--card);
-      border: 2px solid var(--border);
-      padding: 1rem 1.15rem;
+      color: var(--ink);
+      border: 2px solid var(--field-border);
+      border-radius: var(--radius-ctl);
+      padding: 1rem 1.25rem;
     }
+    .option[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+    .option.is-correct { background: var(--gain-bg); color: var(--gain-text); border-color: var(--gain-text); }
+    .option.is-wrong { background: var(--error-bg); color: var(--error-text); border-color: var(--error-text); }
+    .option:disabled:not(.is-correct):not(.is-wrong) { background: var(--card); color: var(--ink-2); border: 2px solid var(--hairline); }
+    .option:disabled { cursor: default; border-style: solid; }
 
-    .option[aria-pressed="true"] { border-color: var(--primary); }
+    .feedback { border-radius: var(--radius-ctl); padding: 1rem 1.25rem; margin: 0 0 1.25rem; max-width: 34em; }
+    .feedback.correct { background: var(--gain-bg); color: var(--gain-text); }
+    .feedback.wrong { background: var(--error-bg); color: var(--error-text); }
+    .feedback strong { display: block; margin-bottom: 0.25rem; font-size: 1.375rem; font-weight: 700; }
+    .feedback p { margin: 0; }
 
-    .option.is-correct {
-      background: var(--correct-bg);
-      color: var(--correct-text);
-      border-color: var(--correct-text);
-    }
+    .complete { padding: 1.5rem; }
+    .complete .badge { display: inline-flex; align-items: center; justify-content: center; width: 3.5rem; height: 3.5rem; margin: 0 0 1rem; border-radius: 50%; background: var(--gain-bg); color: var(--gain-text); font-size: 1.75rem; font-weight: 700; }
+    .complete h2 { margin: 0 0 0.75rem; font-size: 1.75rem; font-weight: 700; line-height: 1.2; letter-spacing: -0.01em; }
+    @media (min-width: 30.0625rem) { .complete h2 { font-size: 2rem; } }
+    .complete p { max-width: 34em; }
 
-    .option.is-wrong {
-      background: var(--wrong-bg);
-      color: var(--wrong-text);
-      border-color: var(--wrong-text);
-    }
-
-    .option:disabled { cursor: default; }
-
-    .feedback {
-      border-radius: 0.75rem;
-      padding: 1rem 1.15rem;
-      margin: 0 0 1.25rem;
-      max-width: 60ch;
-    }
-
-    .feedback.correct {
-      background: var(--correct-bg);
-      color: var(--correct-text);
-    }
-
-    .feedback.wrong {
-      background: var(--wrong-bg);
-      color: var(--wrong-text);
-    }
-
-    .feedback strong { display: block; margin-bottom: 0.35rem; font-size: 1.375rem; }
-
-    .complete {
-      text-align: center;
-      padding: 1rem 0 1.5rem;
-    }
-
-    .complete h2 {
-      margin: 0 0 0.75rem;
-      font-size: 2rem;
-      font-weight: 700;
-    }
-
-    .complete p {
-      margin: 0 auto;
-      max-width: 60ch;
-    }
-
-    .actions {
-      flex-shrink: 0;
-      margin-top: 0;
-      padding-top: 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      background: var(--page);
-    }
-
-    @media (max-height: 56rem) {
-      .actions { padding-top: 0.6rem; gap: 0.65rem; }
-    }
+    /* ---------- actions and buttons ---------- */
+    .actions { flex-shrink: 0; padding-top: 1rem; display: flex; flex-direction: column; gap: 1rem; background: var(--page); }
+    @media (max-height: 56rem) { .actions { padding-top: 0.5rem; gap: 0.5rem; } }
+    @media (min-width: 48rem) { .actions { align-items: stretch; } }
 
     .btn-primary {
       width: 100%;
       min-height: 4rem;
       background: var(--primary);
       color: var(--on-primary);
-      border: 3px solid var(--primary-border);
+      border: 0;
+      border-radius: var(--radius-ctl);
+      font-size: 1.25rem;
     }
+    @media (min-width: 30.0625rem) { .btn-primary, .btn-secondary { font-size: 1.375rem; } }
+    .btn-primary:active { background: var(--primary-press); }
 
     .btn-secondary {
       width: 100%;
       min-height: 3.5rem;
       background: var(--card);
-      color: var(--primary);
-      border: 2px solid var(--primary);
+      color: var(--accent);
+      border: 2px solid var(--field-border);
+      border-radius: var(--radius-ctl);
+    }
+    .btn-secondary:active { background: var(--accent-soft); }
+
+    .pair { display: flex; flex-direction: column; gap: 1rem; }
+    .actions-row { display: flex; flex-direction: row; gap: 0.75rem; }
+    .actions-row .btn-secondary, .actions-row .btn-primary { flex: 1; width: auto; padding-left: 0.5rem; padding-right: 0.5rem; }
+
+    /* disabled buttons keep full opacity: ink-2 label on grey with a dashed edge */
+    button:disabled, button[disabled] {
+      cursor: default;
+      opacity: 1;
+      background: var(--down-bg);
+      color: var(--ink-2);
+      border: 2px dashed var(--field-border);
     }
 
     .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
     }
 
-
-    button:disabled, button[disabled] {
-      cursor: default;
-      opacity: 0.55;
-    }
-
-    .wallet-entry {
-      display: block;
-      width: 100%;
-      text-align: left;
-      background: var(--card);
-      border: 3px solid var(--primary);
-      padding: 1.15rem 1.25rem;
-      min-height: 4rem;
-      margin-bottom: 1.25rem;
-    }
-
+    /* ---------- wallet ---------- */
     .pretend {
       display: inline-block;
-      margin: 0 0 0.85rem;
-      padding: 0.25rem 0.7rem;
-      font-size: 1.125rem;
-      font-weight: 700;
-      color: var(--primary);
-      background: var(--card);
-      border: 2px solid var(--primary);
-      border-radius: 999px;
-    }
-
-    .money {
-      font-weight: 700;
-      font-variant-numeric: tabular-nums;
-      font-feature-settings: "tnum";
-    }
-
-    .money-lg {
-      font-size: 2.25rem;
-      line-height: 1.2;
       margin: 0;
+      padding: 0.25rem 0.9rem;
+      font-size: 1.25rem;
+      font-weight: 700;
+      line-height: 1.4;
+      color: var(--accent);
+      background: var(--accent-soft);
+      border-radius: 999px;
+      white-space: normal;
+      max-width: 100%;
     }
 
-    @media (max-width: 30rem) {
-      .money-lg { font-size: 1.75rem; }
-    }
-
-    .money-md {
-      font-size: 1.75rem;
-      line-height: 1.2;
-    }
-
-    .stat-label {
-      margin: 0 0 0.15rem;
-      color: var(--muted);
-      font-weight: 600;
-      font-size: 1.125rem;
-    }
-
-    .stat-block { margin: 0 0 0.75rem; }
-
-    .hold-card {
-      background: var(--card);
-      border: 2px solid var(--border);
-      border-radius: 0.75rem;
-      padding: 1rem 1.15rem;
-      margin: 0 0 1rem;
-      max-width: 60ch;
-    }
-
-    .hold-card p { margin: 0 0 0.5rem; }
-    .hold-card p:last-child { margin-bottom: 0; }
+    .stat-block { margin: 0 0 1rem; }
+    .stat-block:last-child { margin-bottom: 0; }
 
     .gain {
       display: inline-block;
-      margin-top: 0.35rem;
-      padding: 0.35rem 0.65rem;
-      border-radius: 0.5rem;
-      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 1.25rem;
+      font-weight: 600;
+      line-height: 1.4;
       font-variant-numeric: tabular-nums;
     }
+    .gain.up { background: var(--gain-bg); color: var(--gain-text); }
+    .gain.down { background: var(--down-bg); color: var(--down-text); }
 
-    .gain.up { background: var(--correct-bg); color: var(--correct-text); }
-    .gain.down { background: #EEEEEE; color: #333333; }
+    .history { list-style: none; margin: 0 0 1rem; padding: 0.5rem 1.5rem; }
+    @media (max-width: 20rem) { .history { padding: 0.5rem 1rem; } }
+    .history li { margin: 0; padding: 1rem 0; border-bottom: 1px solid var(--hairline); }
+    .history li:last-child { border-bottom: 0; }
+    .history li.undone { color: var(--ink-2); }
+    .history li.undone .hist-text { text-decoration: line-through; }
+    .history .tag { display: inline-block; margin-left: 0.5rem; font-weight: 700; color: var(--ink-2); }
 
-    .pair {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .actions-row {
-      display: flex;
-      flex-direction: row;
-      gap: 0.75rem;
-    }
-
-    .actions-row .btn-secondary,
-    .actions-row .btn-primary {
-      flex: 1;
-      width: auto;
-    }
-
-    .price-line, .updated {
-      margin: 0 0 0.6rem;
-      color: var(--muted);
-      font-size: 1.125rem;
-    }
-
-    .history {
-      list-style: none;
-      margin: 0.5rem 0 0;
-      padding: 0 0 0.5rem;
-      max-width: 60ch;
-    }
-
-    .history li {
-      margin: 0 0 0.5rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .history li.undone {
-      color: var(--muted);
-    }
-
-    .history li.undone .hist-text {
-      text-decoration: line-through;
-    }
-
-    .history .tag {
-      display: inline-block;
-      margin-left: 0.35rem;
-      font-weight: 700;
-      color: var(--muted);
-    }
-
-    .presets {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.6rem;
-      margin: 0 0 1rem;
-    }
-
-    .presets button {
+    .presets { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 1rem 0 1rem; }
+    .presets button, .range-btn {
       min-height: 3.5rem;
       min-width: 4.5rem;
-      padding: 0.5rem 0.85rem;
+      padding: 0.5rem 1rem;
       background: var(--card);
-      color: var(--primary);
-      border: 2px solid var(--primary);
+      color: var(--ink);
+      border: 2px solid var(--field-border);
+      border-radius: 999px;
     }
-
-    .presets button[aria-pressed="true"] {
-      background: var(--primary);
-      color: var(--on-primary);
-      border-color: var(--primary-border);
+    .presets button[aria-pressed="true"], .range-btn[aria-pressed="true"] {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--accent);
     }
-
-    .field-label {
-      display: block;
-      font-weight: 600;
-      margin: 0 0 0.4rem;
-    }
+    .presets button:disabled { border-style: dashed; }
 
     .dollar-input {
       width: 100%;
@@ -553,66 +439,687 @@
       font-weight: 700;
       font-size: 1.75rem;
       font-variant-numeric: tabular-nums;
-      padding: 0.5rem 0.85rem;
-      border: 2px solid var(--border);
-      border-radius: 0.75rem;
+      padding: 0.5rem 1rem;
+      border: 2px solid var(--field-border);
+      border-radius: var(--radius-ctl);
       background: var(--card);
-      color: var(--text);
+      color: var(--ink);
       max-width: 100%;
     }
+    .dollar-input:disabled { background: var(--down-bg); color: var(--ink-2); border-style: dashed; }
 
-    .dollar-input:focus-visible {
-      outline: 0.25rem solid var(--focus);
-      outline-offset: 0.125rem;
+    .fee-line { margin: 0.5rem 0 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+    .notice { border-radius: var(--radius-ctl); padding: 1rem 1.25rem; margin: 0 0 1rem; max-width: none; }
+    .notice.wait { background: var(--caution-bg); color: var(--caution-text); border-left: 4px solid var(--caution-bar); border-radius: var(--radius-ctl); }
+    .notice.err { background: var(--error-bg); color: var(--error-text); }
+    .actions .notice { margin: 0; }
+
+    /* ---------- tabs: two-way switch ---------- */
+    .wallet-top { margin: 0 0 0.75rem; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; margin: 0 0 0.75rem; background: var(--track); border-radius: 18px; }
+    .tab {
+      flex: 1 1 8rem;
+      min-width: 0;
+      padding: 0.5rem 0.25rem;
+      min-height: 3.5rem;
+      font: inherit;
+      font-weight: 500;
+      border: 2px solid transparent;
+      border-radius: var(--radius-ctl);
+      background: transparent;
+      color: var(--ink-2);
+      cursor: pointer;
+    }
+    .tab[aria-selected="true"] { background: var(--card); color: var(--ink); font-weight: 700; border-color: var(--ink); box-shadow: 0 1px 2px rgba(14, 17, 22, 0.12), 0 2px 8px rgba(14, 17, 22, 0.08); }
+    .tab-mark { display: none; }
+    @media (max-width: 17rem) {
+      /* 200% zoom on a phone: stack things and let the whole page scroll down instead of pinning bars */
+      .shell { height: auto; min-height: 100vh; overflow: visible; }
+      #app, .pane { overflow: visible; }
+      .actions-row { flex-direction: column; }
+      .tabs { flex-direction: column; }
+      .pretend { white-space: normal; text-align: center; }
+    }
+    .tab:focus-visible, .range-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+    /* ---------- Summary ---------- */
+    .summary .gain { margin-top: 0; }
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem 1.5rem; margin: 1.5rem 0 0; padding: 1.5rem 0 0; border-top: 1px solid var(--hairline); }
+    @media (max-width: 30rem) { .stat-grid { grid-template-columns: 1fr; } }
+    .summary .stat-block > p { margin: 0 0 0.25rem; }
+    .summary .stat-block > p.stat-label { margin-bottom: 0.5rem; }
+
+    .hold-table { width: 100%; border-collapse: collapse; margin: 0; font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+    .hold-table th, .hold-table td { text-align: left; padding: 0.5rem 0.375rem; border-bottom: 1px solid var(--hairline); vertical-align: middle; }
+    .hold-table th:first-child, .hold-table td:first-child { padding-left: 0; }
+    .hold-table th:last-child, .hold-table td:last-child { padding-right: 0; }
+    .hold-table thead th { color: var(--ink-2); font-size: 1.25rem; font-weight: 600; background: var(--card); }
+    .hold-table tbody tr { height: 4.5rem; }
+    .hold-table tbody tr:last-child th, .hold-table tbody tr:last-child td { border-bottom: 0; }
+    .hold-table tbody th { font-weight: 600; }
+    .hold-table .coin-cell { display: flex; align-items: center; gap: 0.5rem; }
+    .hold-table th:nth-child(n+2), .hold-table td { text-align: right; }
+    .hold-table td:nth-child(-n+4) { white-space: nowrap; }
+    @media (max-width: 20rem) { .card .hold-table tbody tr { padding: 0.75rem; } .hold-table .dot { display: none; } }
+    .hold-table .gain { padding: 4px 12px; font-size: 1.25rem; line-height: 1.3; white-space: nowrap; text-align: right; border-radius: 16px; }
+    /* the 5-column table with one-line gain chips needs about 790px; wide Summary column at 58rem+, stacked cards below */
+    @media (min-width: 58rem) { .shell.shell-wide { max-width: 58rem; } }
+    @media (max-width: 57.99rem) {
+      .hold-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+      .hold-table, .hold-table tbody, .hold-table tr, .hold-table th, .hold-table td { display: block; width: 100%; }
+      .hold-table tbody tr { height: auto; background: var(--page); border-radius: var(--radius-ctl); padding: 1rem; margin: 0 0 0.75rem; }
+      .hold-table tbody tr:last-child { margin-bottom: 0; }
+      .hold-table th, .hold-table td { border: 0; padding: 0.25rem 0; display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap; text-align: right; }
+      .hold-table tbody th { padding-bottom: 0.5rem; }
+      .hold-table td::before { content: attr(data-label); color: var(--ink-2); font-weight: 600; text-align: left; }
+      .hold-table td.na { display: none; }
+      .hold-table td .gain { margin-left: auto; }
+      .hold-table td, .hold-table td:nth-child(-n+4) { white-space: normal; overflow-wrap: anywhere; }
+      .hold-table .gain { padding: 6px 14px; white-space: normal; text-align: left; }
     }
 
-    .fee-line {
-      margin: 0.85rem 0 0;
-      font-weight: 600;
+    .alloc-bar { display: flex; gap: 2px; height: 24px; border-radius: 999px; overflow: hidden; background: var(--card); }
+    .seg { display: block; flex: 0 1 auto; min-width: 6px; height: 100%; }
+    .seg-label { display: none; }
+    .seg-btc { background: var(--bitcoin); }
+    .seg-eth { background: repeating-linear-gradient(45deg, var(--ether) 0 4px, rgba(255, 255, 255, 0.35) 4px 8px), var(--ether); background-blend-mode: normal; }
+    .seg-cash { background-color: var(--accent); background-image: radial-gradient(circle, rgba(255, 255, 255, 0.35) 1px, transparent 1.4px); background-size: 8px 8px; }
+    .alloc-text { margin: 0; }
+    .alloc-legend { list-style: none; padding: 0; margin: 1rem 0 0; display: flex; flex-direction: column; }
+    .alloc-legend li { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; padding: 0.5rem 0; border-top: 1px solid var(--hairline); color: var(--ink); font-variant-numeric: tabular-nums; }
+    .alloc-legend li:first-child { border-top: 0; }
+    .alloc-legend .l-name { flex: 1 1 auto; min-width: 0; font-weight: 600; }
+    .alloc-legend .l-val { margin-left: auto; text-align: right; }
+    .alloc-legend .l-val b { font-weight: 700; }
+    @media (max-width: 30rem) {
+      .alloc-legend li { display: grid; grid-template-columns: 20px 1fr; column-gap: 0.75rem; row-gap: 0; }
+      .alloc-legend .l-val { grid-column: 2; margin-left: 0; text-align: left; }
     }
+    .swatch { flex: none; display: inline-block; width: 20px; height: 20px; border-radius: 6px; }
 
-    .notice {
-      border-radius: 0.75rem;
-      padding: 1rem 1.15rem;
-      margin: 0 0 1rem;
-      max-width: 60ch;
+    .ranges { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 0 0 1rem; }
+    .range-btn { flex: 1 1 0; min-width: 4rem; font-weight: 600; padding: 0.5rem 0.5rem; }
+
+    .chart-wrap { display: flex; gap: 0.75rem; align-items: stretch; }
+    .chart-axis { display: flex; flex-direction: column; justify-content: space-between; font-size: 1.25rem; line-height: 1.2; color: var(--ink-2); font-weight: 400; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    @media (max-width: 29.99rem) {
+      /* phone: min/max labels sit inside the plot so the line spans the full card width */
+      .chart-wrap { position: relative; display: block; }
+      .chart-axis { position: absolute; inset: 0; z-index: 1; align-items: flex-start; pointer-events: none; }
+      .chart-axis span { background: var(--card); padding: 2px 6px 2px 0; border-radius: 6px; }
+      .chart { padding: 0.75rem 0; box-sizing: border-box; height: 13.5rem; }
     }
-
-    .notice.wait { background: var(--caution-bg); color: var(--caution-text); border-left: 4px solid var(--caution-bar); }
-    .notice.err { background: var(--wrong-bg); color: var(--wrong-text); }
-
-    .coin-pick { display: flex; flex-direction: column; gap: 0.75rem; margin: 0 0 1.15rem; }
-
-    h2.wallet-h {
-      margin: 0.75rem 0 0.5rem;
-      font-size: 1.625rem;
-      font-weight: 700;
-    }
-
-    @media (min-width: 48rem) {
-      .actions { align-items: stretch; }
-    }
+    .chart { flex: 1; min-width: 0; width: 100%; height: 12rem; display: block; overflow: visible; }
+    @media (min-width: 48rem) { .chart { height: 14rem; } }
+    .chart-line { fill: none; stroke: var(--accent); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+    .chart-area { stroke: none; }
+    .chart-base { stroke: var(--field-border); stroke-width: 2; stroke-dasharray: 6 6; }
+    .chart-foot { display: flex; justify-content: space-between; color: var(--ink-2); font-size: 1.25rem; margin: 0.5rem 0 0; }
+    .chart-key { display: flex; align-items: center; gap: 0.75rem; font-size: 1.25rem; color: var(--ink-2); margin: 0.75rem 0 0; }
+    .key-dash { flex: none; display: inline-block; width: 2rem; border-top: 2px dashed var(--field-border); }
+    .chart-sentence { font-weight: 600; margin: 1rem 0 0; color: var(--ink); max-width: 34em; }
+    .chart-empty { border-style: dashed; box-shadow: none; padding: 1.5rem; text-align: left; margin: 0; color: var(--ink-2); }
   </style>
 </head>
 <body>
   <div class="shell">
-    <header class="banner">
-      <h1>A simple guide to Bitcoin and crypto</h1>
+    <header class="app-header">
+      <div class="brand"><span class="brand-mark" aria-hidden="true"></span><h1>A simple guide to Bitcoin and crypto</h1></div>
       <p class="subtitle">Practice only. No real money.</p>
     </header>
     <main id="app"></main>
   </div>
 
   <script>
-    const LESSONS = {"version":1,"lessons":[{"id":"what-is-bitcoin","title":"What is Bitcoin?","screens":["Bitcoin is a kind of digital money. It lives on computers, not in your purse.","No bank or government runs Bitcoin. Thousands of computers around the world keep the records together.","Those computers share one big record book, called the blockchain. It lists every Bitcoin payment ever made.","There will only ever be 21 million bitcoins. That limit is written into Bitcoin's rules.","You don't have to buy a whole bitcoin. You can buy a small piece, like $10 worth.","Bitcoin's price goes up and down a lot, sometimes in a single day. Only ever use money you could afford to lose.","Bitcoin started in 2009. It was created by a person or group using the name Satoshi Nakamoto, and nobody knows for sure who that is."],"quiz":[{"q":"Who runs Bitcoin?","options":["A big bank","The government","Many computers around the world, together"],"answer":2,"explanation":"No single company or government is in charge. Many computers share the work."},{"q":"Do you have to buy a whole bitcoin?","options":["Yes, always","No, you can buy a small piece"],"answer":1,"explanation":"You can buy a small piece, like $10 or $50 worth."},{"q":"How many bitcoins will there ever be?","options":["As many as people want","21 million","1 billion"],"answer":1,"explanation":"Bitcoin's rules cap it at 21 million coins."}],"checkedOn":"2026-11-26","checkedBy":"Satoshi"},{"id":"spotting-scams","title":"Spotting crypto scams","screens":["Crypto scams are common. Knowing a few warning signs will keep you safe.","Never share your passwords, codes, or your 'secret words' (sometimes called a seed phrase) with anyone. Anyone who has them can take your money.","No real company, bank, or helper will ever ask for your secret words. If someone asks, it is a scam.","Be careful of anyone who promises 'guaranteed' profits or says you can 'double your money.' Real investments never promise that.","Scammers rush you. If someone says you must act today, stop and hang up.","Watch out for a new online friend or sweetheart who brings up crypto. That's a common scam.","Nobody can 'unlock' or 'recover' money you've lost if you pay them a fee first. Those offers are scams too.","If something feels wrong, stop and ask a family member you trust before you do anything. In this app you're only practising, so your real money is always safe here."],"quiz":[{"q":"Someone on the phone says they're from 'Bitcoin support' and asks for your secret words. What do you do?","options":["Read the words to them","Hang up. It's a scam","Ask them to call back later"],"answer":1,"explanation":"Nobody real ever needs your secret words. Hang up."},{"q":"An ad promises you'll 'double your money in a week, guaranteed.' This is:","options":["A great deal","Probably a scam"],"answer":1,"explanation":"Guaranteed big profits are a classic sign of a scam."},{"q":"What's the best thing to do when something feels wrong?","options":["Act fast before you miss out","Stop and ask someone you trust"],"answer":1,"explanation":"Slow down. Scammers rely on rushing you."}],"checkedOn":"2026-11-26","checkedBy":"Satoshi"},{"id":"buying-and-selling","title":"What buying and selling means","screens":["Buying Bitcoin means trading your dollars for a piece of Bitcoin.","Selling means trading your Bitcoin back into dollars.","The price changes all day, every day. What you pay depends on the price at the moment you buy.","If the price goes up after you buy, your Bitcoin is worth more. If it goes down, it's worth less.","You only make or lose money for real when you sell. Until then, it's just the current value.","Most places that sell crypto charge a small fee each time you buy or sell. Our practice wallet does this too, so it feels realistic.","In this app you'll practise with pretend money. Nothing you do here costs real dollars."],"quiz":[{"q":"What does 'selling' Bitcoin mean?","options":["Trading Bitcoin back into dollars","Giving it away for free"],"answer":0,"explanation":"Selling turns your Bitcoin back into dollars."},{"q":"You buy $100 of Bitcoin and the price goes down. Your Bitcoin is now worth:","options":["More than $100","Less than $100","Exactly $100"],"answer":1,"explanation":"When the price drops, what you hold is worth less."},{"q":"Does the practice wallet use real money?","options":["Yes","No, it's pretend money"],"answer":1,"explanation":"Everything here is pretend, so you can learn safely."}],"checkedOn":"2026-11-26","checkedBy":"Satoshi"}]};
+    const LESSONS = {
+  "version": 2,
+  "lessons": [
+    {
+      "id": "what-is-bitcoin",
+      "title": "What is Bitcoin?",
+      "screens": [
+        "Bitcoin is a kind of digital money. It lives on computers, not in your purse.",
+        "No bank or government runs Bitcoin. Thousands of computers around the world keep the records together.",
+        "Those computers share one big record book, called the blockchain. It lists every Bitcoin payment ever made.",
+        "There will only ever be 21 million bitcoins. That limit is written into Bitcoin's rules.",
+        "You don't have to buy a whole bitcoin. You can buy a small piece, like $10 worth.",
+        "Bitcoin's price goes up and down a lot, sometimes in a single day. Only ever use money you could afford to lose.",
+        "Bitcoin started in 2009. It was created by a person or group using the name Satoshi Nakamoto, and nobody knows for sure who that is."
+      ],
+      "quiz": [
+        {
+          "q": "Who runs Bitcoin?",
+          "options": [
+            "A big bank",
+            "The government",
+            "Many computers around the world, together"
+          ],
+          "answer": 2,
+          "explanation": "No single company or government is in charge. Many computers share the work."
+        },
+        {
+          "q": "Do you have to buy a whole bitcoin?",
+          "options": [
+            "Yes, always",
+            "No, you can buy a small piece"
+          ],
+          "answer": 1,
+          "explanation": "You can buy a small piece, like $10 or $50 worth."
+        },
+        {
+          "q": "How many bitcoins will there ever be?",
+          "options": [
+            "As many as people want",
+            "21 million",
+            "1 billion"
+          ],
+          "answer": 1,
+          "explanation": "Bitcoin's rules cap it at 21 million coins."
+        }
+      ],
+      "checkedOn": "2026-11-26",
+      "checkedBy": "Satoshi"
+    },
+    {
+      "id": "spotting-scams",
+      "title": "Spotting crypto scams",
+      "screens": [
+        "Crypto scams are common. Knowing a few warning signs will keep you safe.",
+        "Never share your passwords, codes, or your 'secret words' (sometimes called a seed phrase) with anyone. Anyone who has them can take your money.",
+        "No real company, bank, or helper will ever ask for your secret words. If someone asks, it is a scam.",
+        "Be careful of anyone who promises 'guaranteed' profits or says you can 'double your money.' Real investments never promise that.",
+        "Scammers rush you. If someone says you must act today, stop and hang up.",
+        "Watch out for a new online friend or sweetheart who brings up crypto. That's a common scam.",
+        "Nobody can 'unlock' or 'recover' money you've lost if you pay them a fee first. Those offers are scams too.",
+        "If something feels wrong, stop and ask a family member you trust before you do anything. In this app you're only practising, so your real money is always safe here."
+      ],
+      "quiz": [
+        {
+          "q": "Someone on the phone says they're from 'Bitcoin support' and asks for your secret words. What do you do?",
+          "options": [
+            "Read the words to them",
+            "Hang up. It's a scam",
+            "Ask them to call back later"
+          ],
+          "answer": 1,
+          "explanation": "Nobody real ever needs your secret words. Hang up."
+        },
+        {
+          "q": "An ad promises you'll 'double your money in a week, guaranteed.' This is:",
+          "options": [
+            "A great deal",
+            "Probably a scam"
+          ],
+          "answer": 1,
+          "explanation": "Guaranteed big profits are a classic sign of a scam."
+        },
+        {
+          "q": "What's the best thing to do when something feels wrong?",
+          "options": [
+            "Act fast before you miss out",
+            "Stop and ask someone you trust"
+          ],
+          "answer": 1,
+          "explanation": "Slow down. Scammers rely on rushing you."
+        }
+      ],
+      "checkedOn": "2026-11-26",
+      "checkedBy": "Satoshi"
+    },
+    {
+      "id": "buying-and-selling",
+      "title": "What buying and selling means",
+      "screens": [
+        "Buying Bitcoin means trading your dollars for a piece of Bitcoin.",
+        "Selling means trading your Bitcoin back into dollars.",
+        "The price changes all day, every day. What you pay depends on the price at the moment you buy.",
+        "If the price goes up after you buy, your Bitcoin is worth more. If it goes down, it's worth less.",
+        "You only make or lose money for real when you sell. Until then, it's just the current value.",
+        "Most places that sell crypto charge a small fee each time you buy or sell. Our practice wallet does this too, so it feels realistic.",
+        "In this app you'll practise with pretend money. Nothing you do here costs real dollars."
+      ],
+      "quiz": [
+        {
+          "q": "What does 'selling' Bitcoin mean?",
+          "options": [
+            "Trading Bitcoin back into dollars",
+            "Giving it away for free"
+          ],
+          "answer": 0,
+          "explanation": "Selling turns your Bitcoin back into dollars."
+        },
+        {
+          "q": "You buy $100 of Bitcoin and the price goes down. Your Bitcoin is now worth:",
+          "options": [
+            "More than $100",
+            "Less than $100",
+            "Exactly $100"
+          ],
+          "answer": 1,
+          "explanation": "When the price drops, what you hold is worth less."
+        },
+        {
+          "q": "Does the practice wallet use real money?",
+          "options": [
+            "Yes",
+            "No, it's pretend money"
+          ],
+          "answer": 1,
+          "explanation": "Everything here is pretend, so you can learn safely."
+        }
+      ],
+      "checkedOn": "2026-11-26",
+      "checkedBy": "Satoshi"
+    },
+    {
+      "id": "how-blockchain-works",
+      "title": "How a blockchain keeps score",
+      "screens": [
+        "A blockchain is a shared record book. It keeps track of who owns what.",
+        "New payments are grouped into pages called blocks. For Bitcoin, a new block is added about every 10 minutes.",
+        "Each new page is linked to the one before it, like links in a chain. That's where the name comes from.",
+        "Thousands of computers keep their own copy of the whole book, and they check each other's work.",
+        "To change an old page, someone would have to out-work most of those computers at once. That's why old records are so hard to fake.",
+        "Once a payment is in the book, it can't be cancelled. There's no 'undo' button and no bank to call for a refund."
+      ],
+      "quiz": [
+        {
+          "q": "What is a blockchain?",
+          "options": [
+            "A shared record book",
+            "A kind of bank account",
+            "A computer game"
+          ],
+          "answer": 0,
+          "explanation": "It's a record book that many computers share and check."
+        },
+        {
+          "q": "Who keeps a copy of the Bitcoin record book?",
+          "options": [
+            "One company",
+            "Thousands of computers around the world"
+          ],
+          "answer": 1,
+          "explanation": "Many computers each keep a full copy and check each other."
+        },
+        {
+          "q": "Can a Bitcoin payment be cancelled once it's done?",
+          "options": [
+            "Yes, call the bank",
+            "No, it can't be undone"
+          ],
+          "answer": 1,
+          "explanation": "Crypto payments are final. That's why scammers like them."
+        }
+      ],
+      "checkedOn": "2026-11-28",
+      "checkedBy": "Satoshi"
+    },
+    {
+      "id": "wallets-and-keys",
+      "title": "Wallets and secret words",
+      "screens": [
+        "A crypto wallet is an app or small device that lets you use your coins.",
+        "Your coins aren't really inside the wallet. They're recorded on the blockchain. The wallet holds the key that lets you spend them.",
+        "When you set up a wallet, it gives you a list of 12 or 24 secret words. Those words are the master key.",
+        "Anyone who has your secret words can take everything. Nobody can undo it.",
+        "Write the words on paper and keep them somewhere safe. Never type them into a website, an email, or a text, and never take a photo of them.",
+        "Some people let a company that holds crypto for them keep it instead. That's simpler, but you're trusting that company.",
+        "In this app there is no real wallet and there are no secret words. It will never ask you for any."
+      ],
+      "quiz": [
+        {
+          "q": "What do a wallet's secret words do?",
+          "options": [
+            "They unlock all your coins",
+            "Nothing important",
+            "They change the price"
+          ],
+          "answer": 0,
+          "explanation": "The secret words are the master key to everything in the wallet."
+        },
+        {
+          "q": "Where should you keep your secret words?",
+          "options": [
+            "In an email to yourself",
+            "Written on paper, somewhere safe",
+            "Posted online so you don't lose them"
+          ],
+          "answer": 1,
+          "explanation": "Paper, kept somewhere safe and private."
+        },
+        {
+          "q": "Will this practice app ever ask for secret words?",
+          "options": [
+            "Yes",
+            "Never"
+          ],
+          "answer": 1,
+          "explanation": "Never. If anything asks, it isn't this app."
+        }
+      ],
+      "checkedOn": "2026-11-28",
+      "checkedBy": "Satoshi"
+    },
+    {
+      "id": "why-prices-swing",
+      "title": "Why prices go up and down",
+      "screens": [
+        "Crypto prices are set by people buying and selling, all day and night, every day of the year.",
+        "When more people want to buy than sell, the price goes up. When more want to sell, it goes down.",
+        "News, rumours, and people's moods can move prices quickly. A rise or fall of 5% in one day is common.",
+        "Bitcoin has dropped by more than half several times in its history, and it has also risen a lot. Nobody knows what will happen next.",
+        "Anyone who says they know where the price is going is guessing, or trying to sell you something.",
+        "Many careful people only put in a small amount they could afford to lose, and don't check the price every hour."
+      ],
+      "quiz": [
+        {
+          "q": "What makes the price go up?",
+          "options": [
+            "More people wanting to buy than sell",
+            "The government sets it",
+            "It goes up every day by itself"
+          ],
+          "answer": 0,
+          "explanation": "Prices rise when buyers outnumber sellers."
+        },
+        {
+          "q": "Someone tells you they know Bitcoin will double next month. They are:",
+          "options": [
+            "An expert you can trust",
+            "Guessing, or selling something"
+          ],
+          "answer": 1,
+          "explanation": "Nobody knows future prices."
+        },
+        {
+          "q": "A sensible amount to put into crypto is:",
+          "options": [
+            "Your life savings",
+            "Only what you could afford to lose"
+          ],
+          "answer": 1,
+          "explanation": "Prices swing a lot, so only use money you could lose."
+        }
+      ],
+      "checkedOn": "2026-11-28",
+      "checkedBy": "Satoshi"
+    },
+    {
+      "id": "stablecoins",
+      "title": "Stablecoins: coins that try to stay at $1",
+      "screens": [
+        "A stablecoin is a crypto coin designed to always be worth about one US dollar.",
+        "Most are run by companies that say they hold real dollars or safe investments to back each coin.",
+        "People use them to move money quickly or to park money between trades.",
+        "'Stable' doesn't mean risk-free. You're trusting the company behind the coin.",
+        "Some stablecoins have failed. In 2022, one called TerraUSD collapsed and lost almost all its value.",
+        "A stablecoin offering a very high interest rate is a warning sign."
+      ],
+      "quiz": [
+        {
+          "q": "A stablecoin tries to stay worth about:",
+          "options": [
+            "One US dollar",
+            "One bitcoin",
+            "Nothing"
+          ],
+          "answer": 0,
+          "explanation": "Most stablecoins aim to stay at $1."
+        },
+        {
+          "q": "Are stablecoins completely risk-free?",
+          "options": [
+            "Yes",
+            "No, you're trusting the company behind them"
+          ],
+          "answer": 1,
+          "explanation": "They depend on the company and what backs them."
+        },
+        {
+          "q": "A stablecoin offering a huge interest rate is:",
+          "options": [
+            "A great deal",
+            "A warning sign"
+          ],
+          "answer": 1,
+          "explanation": "Very high promised returns are a red flag."
+        }
+      ],
+      "checkedOn": "2026-11-28",
+      "checkedBy": "Satoshi"
+    },
+    {
+      "id": "what-is-ethereum",
+      "title": "What is Ethereum?",
+      "screens": [
+        "Ethereum is another big cryptocurrency network, like Bitcoin. Its coin is called ether, or ETH for short.",
+        "Ethereum started in 2015. One of its creators is a programmer named Vitalik Buterin.",
+        "Like Bitcoin, Ethereum keeps a shared record book that thousands of computers check. No bank runs it.",
+        "Ethereum can also run small programs, called smart contracts. They follow their rules automatically, without a middleman.",
+        "People use those programs to build things like digital collectibles, trading apps, and dollar-like coins.",
+        "Ether's price goes up and down a lot too, often even more than Bitcoin's."
+      ],
+      "quiz": [
+        {
+          "q": "What is Ethereum's coin called?",
+          "options": [
+            "Ether (ETH)",
+            "Bitcoin",
+            "Dollar"
+          ],
+          "answer": 0,
+          "explanation": "Ethereum's coin is ether, written ETH."
+        },
+        {
+          "q": "What can Ethereum do that Bitcoin mostly doesn't?",
+          "options": [
+            "Run small programs called smart contracts",
+            "Print paper money"
+          ],
+          "answer": 0,
+          "explanation": "Smart contracts are programs that run on Ethereum."
+        },
+        {
+          "q": "Does a bank run Ethereum?",
+          "options": [
+            "Yes",
+            "No, many computers run it together"
+          ],
+          "answer": 1,
+          "explanation": "Like Bitcoin, it's run by many computers, not a bank."
+        }
+      ],
+      "checkedOn": "2026-11-28",
+      "checkedBy": "Satoshi"
+    },
+    {
+      "id": "ethereum-vs-bitcoin",
+      "title": "How Ethereum is different from Bitcoin",
+      "screens": [
+        "Bitcoin is built mainly to be money: something to hold and send.",
+        "Ethereum is built to be more like a shared computer that anyone can build apps on.",
+        "Bitcoin will never have more than 21 million coins. Ether has no fixed limit, though new ether is added slowly and some is destroyed with fees.",
+        "Bitcoin is kept secure by 'mining,' which uses a lot of electricity.",
+        "Since 2022, Ethereum works a different way, called 'staking.' People lock up their ether to help keep the network honest. This uses far less electricity.",
+        "Neither one is simply 'better.' They're different tools, and both carry risk."
+      ],
+      "quiz": [
+        {
+          "q": "Which one has a fixed limit of 21 million coins?",
+          "options": [
+            "Bitcoin",
+            "Ethereum"
+          ],
+          "answer": 0,
+          "explanation": "Only Bitcoin has a fixed 21 million limit."
+        },
+        {
+          "q": "Ethereum is built mostly to be:",
+          "options": [
+            "A shared computer for apps",
+            "A savings account at a bank"
+          ],
+          "answer": 0,
+          "explanation": "It's designed so people can build apps on it."
+        },
+        {
+          "q": "How does Ethereum keep its network honest since 2022?",
+          "options": [
+            "Mining with lots of electricity",
+            "Staking: people lock up ether"
+          ],
+          "answer": 1,
+          "explanation": "Ethereum switched to staking in 2022."
+        }
+      ],
+      "checkedOn": "2026-11-28",
+      "checkedBy": "Satoshi"
+    },
+    {
+      "id": "gas-fees",
+      "title": "What 'gas' means",
+      "screens": [
+        "Every time you do something on Ethereum, like sending ether, you pay a small fee. That fee is called 'gas.'",
+        "Gas pays the people who run the network for doing the work.",
+        "Gas is paid in ether, even if you're sending something else.",
+        "The fee changes. When lots of people are using Ethereum at once, it costs more. When it's quiet, it costs less.",
+        "A failed or cancelled attempt can still cost gas, because the network did the work.",
+        "Bitcoin has fees too. They work in a similar way.",
+        "In this practice app, there's no gas. You just pay a simple 0.5% fee on each buy or sell, so it feels like a real trading app."
+      ],
+      "quiz": [
+        {
+          "q": "What is 'gas' on Ethereum?",
+          "options": [
+            "A fee for using the network",
+            "Fuel for your car",
+            "A type of coin"
+          ],
+          "answer": 0,
+          "explanation": "Gas is the fee for doing anything on Ethereum."
+        },
+        {
+          "q": "When are gas fees usually highest?",
+          "options": [
+            "When the network is busy",
+            "Always the same"
+          ],
+          "answer": 0,
+          "explanation": "Busy times cost more, like rush-hour pricing."
+        },
+        {
+          "q": "What fee does this practice app charge?",
+          "options": [
+            "Gas",
+            "A simple 0.5% fee per trade"
+          ],
+          "answer": 1,
+          "explanation": "The app uses a flat 0.5% fee to keep things realistic."
+        }
+      ],
+      "checkedOn": "2026-11-28",
+      "checkedBy": "Satoshi"
+    },
+    {
+      "id": "ethereum-scams",
+      "title": "Ethereum scams to watch for",
+      "screens": [
+        "Ethereum has its own tricks that scammers use. Knowing them keeps you safe.",
+        "Fake 'free coins' or 'claim your reward' messages are a trap. Clicking them can empty a wallet.",
+        "Some websites ask you to 'connect your wallet' and then 'approve' something. That approval can let them take your coins.",
+        "Scammers copy real websites almost perfectly. Always type the address yourself or use a bookmark you trust.",
+        "Anyone can make a coin with any name, even a famous one. A coin with a familiar name can still be fake.",
+        "Scammers sometimes post fake videos of famous people promising to send back double whatever you send. It's always fake.",
+        "The golden rule is the same as before: never share your secret words, and stop and ask someone you trust when you're unsure."
+      ],
+      "quiz": [
+        {
+          "q": "You get a message saying 'Claim your free ETH now!' What do you do?",
+          "options": [
+            "Click quickly",
+            "Ignore it. It's a scam"
+          ],
+          "answer": 1,
+          "explanation": "'Free coins' messages are a common trap."
+        },
+        {
+          "q": "A website asks you to 'approve' something with your wallet. What's the risk?",
+          "options": [
+            "None",
+            "It may let them take your coins"
+          ],
+          "answer": 1,
+          "explanation": "An approval can give a scammer permission to move your coins."
+        },
+        {
+          "q": "A video shows a famous person promising to double any ETH you send. This is:",
+          "options": [
+            "A real giveaway",
+            "Always a scam"
+          ],
+          "answer": 1,
+          "explanation": "Real people never double your money. It's always fake."
+        }
+      ],
+      "checkedOn": "2026-11-28",
+      "checkedBy": "Satoshi"
+    },
+    {
+      "id": "using-the-practice-wallet",
+      "title": "Using your practice wallet",
+      "screens": [
+        "Your practice wallet starts with $10,000 of pretend money. None of it is real.",
+        "You choose how many dollars to spend, like $100, and the app buys that much Bitcoin or Ethereum at today's real price.",
+        "The smallest trade is $1. Each buy or sell has a small 0.5% fee, just like a real app.",
+        "If prices haven't updated for a couple of minutes, the app pauses buying and selling until fresh prices arrive. That keeps it honest.",
+        "Made a mistake? You can undo trades one at a time, newest first. You can also start over with a fresh $10,000 at any time. Your lessons stay.",
+        "Watch your gains and losses over days and weeks. It's a safe way to feel how much prices really move."
+      ],
+      "quiz": [
+        {
+          "q": "Is the money in the practice wallet real?",
+          "options": [
+            "Yes",
+            "No, it's pretend"
+          ],
+          "answer": 1,
+          "explanation": "It's all pretend, so you can learn safely."
+        },
+        {
+          "q": "What's the smallest trade you can make?",
+          "options": [
+            "$1",
+            "$100",
+            "$1,000"
+          ],
+          "answer": 0,
+          "explanation": "The minimum trade is $1."
+        },
+        {
+          "q": "If you make a mistake, what can you do?",
+          "options": [
+            "Undo it",
+            "Nothing"
+          ],
+          "answer": 0,
+          "explanation": "You can undo trades, newest first, or start over with a fresh $10,000."
+        }
+      ],
+      "checkedOn": "2026-11-28",
+      "checkedBy": "Satoshi"
+    }
+  ]
+};
 
     const STORAGE_KEY = "crypto-grandma-v1";
     const lessons = LESSONS.lessons;
 
     const ICONS = {
-      "what-is-bitcoin": `<svg class="illustration" viewBox="0 0 120 120" aria-hidden="true" focusable="false"><circle cx="60" cy="60" r="42" fill="#FFFFFF" stroke="#1F2430" stroke-width="3"/><circle cx="60" cy="60" r="30" fill="#FBF7F0" stroke="#1F2430" stroke-width="3"/><text x="60" y="72" text-anchor="middle" font-size="36" font-weight="700" fill="#E8912D" font-family="-apple-system, 'Segoe UI', Arial, sans-serif">B</text></svg>`,
-      "spotting-scams": `<svg class="illustration" viewBox="0 0 120 120" aria-hidden="true" focusable="false"><path d="M60 18l38 14v28c0 24-16 40-38 48C38 100 22 84 22 60V32z" fill="#FFF1D6" stroke="#1F2430" stroke-width="3" stroke-linejoin="round"/><path d="M42 62l12 12 24-26" fill="none" stroke="#165C30" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
-      "buying-and-selling": `<svg class="illustration" viewBox="0 0 120 120" aria-hidden="true" focusable="false"><rect x="18" y="38" width="38" height="28" rx="6" fill="#FFFFFF" stroke="#1F2430" stroke-width="3"/><rect x="64" y="54" width="38" height="28" rx="6" fill="#FBF7F0" stroke="#1F2430" stroke-width="3"/><path d="M44 28h0c10 0 18 8 18 16" fill="none" stroke="#1A4F8C" stroke-width="3" stroke-linecap="round"/><path d="M56 22l6 10-12 0z" fill="#1A4F8C" stroke="#1F2430" stroke-width="1.5"/><path d="M76 92h0c-10 0-18-8-18-16" fill="none" stroke="#1A4F8C" stroke-width="3" stroke-linecap="round"/><path d="M64 98l-6-10 12 0z" fill="#1A4F8C" stroke="#1F2430" stroke-width="1.5"/><text x="37" y="58" text-anchor="middle" font-size="16" font-weight="700" fill="#1F2430" font-family="Arial,sans-serif">$</text><circle cx="83" cy="68" r="8" fill="none" stroke="#E8912D" stroke-width="3"/></svg>`
+      "what-is-bitcoin": `<svg class="illustration" viewBox="0 0 120 120" aria-hidden="true" focusable="false"><circle cx="60" cy="60" r="42" fill="#FFFFFF" stroke="#0E1116" stroke-width="3"/><circle cx="60" cy="60" r="30" fill="#F6F5F2" stroke="#0E1116" stroke-width="3"/><text x="60" y="72" text-anchor="middle" font-size="36" font-weight="700" fill="#C46A12" font-family="-apple-system, 'Segoe UI', Arial, sans-serif">B</text></svg>`,
+      "spotting-scams": `<svg class="illustration" viewBox="0 0 120 120" aria-hidden="true" focusable="false"><path d="M60 18l38 14v28c0 24-16 40-38 48C38 100 22 84 22 60V32z" fill="#FFF3D9" stroke="#0E1116" stroke-width="3" stroke-linejoin="round"/><path d="M42 62l12 12 24-26" fill="none" stroke="#06552D" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+      "buying-and-selling": `<svg class="illustration" viewBox="0 0 120 120" aria-hidden="true" focusable="false"><rect x="18" y="38" width="38" height="28" rx="6" fill="#FFFFFF" stroke="#0E1116" stroke-width="3"/><rect x="64" y="54" width="38" height="28" rx="6" fill="#F6F5F2" stroke="#0E1116" stroke-width="3"/><path d="M44 28h0c10 0 18 8 18 16" fill="none" stroke="#2A1FB8" stroke-width="3" stroke-linecap="round"/><path d="M56 22l6 10-12 0z" fill="#2A1FB8" stroke="#0E1116" stroke-width="1.5"/><path d="M76 92h0c-10 0-18-8-18-16" fill="none" stroke="#2A1FB8" stroke-width="3" stroke-linecap="round"/><path d="M64 98l-6-10 12 0z" fill="#2A1FB8" stroke="#0E1116" stroke-width="1.5"/><text x="37" y="58" text-anchor="middle" font-size="16" font-weight="700" fill="#0E1116" font-family="Arial,sans-serif">$</text><circle cx="83" cy="68" r="8" fill="none" stroke="#C46A12" stroke-width="3"/></svg>`
     };
 
     function defaultState() {
@@ -665,6 +1172,10 @@
     }
 
     let state = loadState();
+    // A saved lesson view for a lesson that no longer exists falls back to home.
+    if (["lesson", "quiz", "complete"].includes(state.view) && !lessons.some((l) => l.id === state.lessonId)) {
+      state.view = "home"; state.lessonId = null; state.selected = null; state.revealed = false;
+    }
 
     // Wallet helpers are defined below; load saved wallet after they exist.
     let _pendingWallet = state.wallet;
@@ -677,12 +1188,6 @@
 
     function lessonIndex(id) {
       return lessons.findIndex((l) => l.id === id);
-    }
-
-    function statusFor(id) {
-      if (state.done[id]) return "Done";
-      if (state.started[id]) return "In progress";
-      return "Not started";
     }
 
     function goHome() {
@@ -947,9 +1452,8 @@
 
     function formatPrice(price) {
       if (price == null || !Number.isFinite(price)) return "—";
-      const parts = String(price).split(".");
-      const dec = parts[1] ? Math.min(8, Math.max(2, parts[1].length)) : 2;
-      return "$" + price.toLocaleString("en-US", { minimumFractionDigits: dec, maximumFractionDigits: dec });
+      // Every dollar amount shown to the user has exactly 2 decimals (slice 2b). Math stays in cents.
+      return "$" + (Math.round(price * 100) / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     function parseDollarInput(text) {
@@ -1001,6 +1505,21 @@
       const mins = Math.floor(secs / 60);
       if (mins === 1) return "Updated 1 minute ago";
       return "Updated " + mins + " minutes ago";
+    }
+
+    function lastUpdatedClock() {
+      const times = ["btc", "eth"].map((id) => prices[id] && prices[id].fetchedAt).filter(Boolean);
+      if (!times.length) return "";
+      return new Date(Math.min.apply(null, times)).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+    }
+
+    function noticeMarkup(notice) {
+      if (!notice) return "";
+      let text = notice.text;
+      const hasAny = (prices.btc && prices.btc.value != null) || (prices.eth && prices.eth.value != null);
+      const clock = lastUpdatedClock();
+      if (notice.kind === "wait" && hasAny && clock) text = "Prices may be out of date. Last updated " + clock + ".";
+      return `<div class="notice ${notice.kind}" role="status">${escapeHtml(text)}</div>`;
     }
 
     function walletNotice() {
@@ -1218,11 +1737,13 @@
         }
         if (prices.pinned) return;
         acceptPrices(pack);
+        onPricesRefreshed();
       } catch (e) {
         try {
           const pack = await fetchGecko();
           if (prices.pinned) return;
           acceptPrices(pack);
+          onPricesRefreshed();
         } catch (e2) {
           if (prices.pinned) return;
           prices.error = "both";
@@ -1232,7 +1753,7 @@
     }
 
     function isWalletView(view) {
-      return view === "wallet" || view === "trade" || view === "confirm" || view === "startover";
+      return view === "wallet" || view === "summary" || view === "trade" || view === "confirm" || view === "startover";
     }
 
     function startPolling() {
@@ -1435,6 +1956,7 @@
       tradeError = "";
       state.view = "wallet";
       persistWallet();
+      recordSnapshot(true);
       render();
     }
 
@@ -1467,6 +1989,678 @@
       return `<p>Average cost ${avgText}.</p><p><span class="gain ${cls}">${word} ${arrow} ${signAmt} (${signPct})</span></p>`;
     }
 
+    // ---------- Slice 2b: Summary tab and on-device performance history ----------
+    const HIST_KEY = "crypto-grandma-v1-history";
+    const SNAP_GAP_MS = 5 * 60 * 1000;
+    const HOUR_MS = 60 * 60 * 1000;
+    const DAY_MS = 24 * HOUR_MS;
+    const HIST_CAP = 1500;
+    const RANGES = {
+      "1D": { ms: DAY_MS, label: "One day", phrase: "Over the past day", left: "A day ago" },
+      "1W": { ms: 7 * DAY_MS, label: "One week", phrase: "Over the past week", left: "A week ago" },
+      "1M": { ms: 30 * DAY_MS, label: "One month", phrase: "Over the past month", left: "A month ago" },
+      "All": { ms: null, label: "All time", phrase: "Since you started", left: "" }
+    };
+    let fakeNow = null;
+    let summaryRange = "1W";
+    let perfHistory = loadHistory();
+
+    function nowMs() { return fakeNow != null ? fakeNow : Date.now(); }
+
+    function loadHistory() {
+      try {
+        const raw = JSON.parse(localStorage.getItem(HIST_KEY) || "[]");
+        if (!Array.isArray(raw)) return [];
+        return raw.filter((p) => p && Number.isFinite(p.t) && Number.isInteger(p.worthCents))
+          .sort((a, b) => a.t - b.t);
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveHistory() {
+      try { localStorage.setItem(HIST_KEY, JSON.stringify(perfHistory)); } catch (e) { /* storage full: keep in memory */ }
+    }
+
+    // Full detail for 2 days, one point per hour up to 2 months, one per day beyond. Keeps the last point in each bucket.
+    function compactHistory() {
+      const now = nowMs();
+      perfHistory.sort((a, b) => a.t - b.t);
+      const keep = [];
+      const seen = new Map();
+      for (let i = perfHistory.length - 1; i >= 0; i--) {
+        const p = perfHistory[i];
+        const age = now - p.t;
+        let key = null;
+        if (age > 60 * DAY_MS) key = "d" + Math.floor(p.t / DAY_MS);
+        else if (age > 2 * DAY_MS) key = "h" + Math.floor(p.t / HOUR_MS);
+        if (key && !p.marker) {
+          if (seen.has(key)) continue;
+          seen.set(key, true);
+        }
+        keep.push(p);
+      }
+      keep.reverse();
+      perfHistory = keep.length > HIST_CAP ? keep.slice(keep.length - HIST_CAP) : keep;
+    }
+
+    function currentPoint(t) {
+      return {
+        t,
+        worthCents: totalWorthCents(),
+        cashCents: wallet.cashCents,
+        btcUnits: wallet.coins.btc.units,
+        ethUnits: wallet.coins.eth.units
+      };
+    }
+
+    function haveWorthForHoldings() {
+      for (const id of ["btc", "eth"]) {
+        if (wallet.coins[id].units > 0 && !lastPrice(id)) return false;
+      }
+      return true;
+    }
+
+    // force: after a trade, Undo or Start over. Otherwise at most one point every 5 minutes.
+    function recordSnapshot(force) {
+      if (!haveWorthForHoldings()) return false;
+      const t = nowMs();
+      const last = perfHistory[perfHistory.length - 1];
+      if (!force && last && t - last.t < SNAP_GAP_MS) return false;
+      perfHistory.push(currentPoint(t));
+      compactHistory();
+      saveHistory();
+      return true;
+    }
+
+    function onPricesRefreshed() { return recordSnapshot(false); }
+
+    function resetHistory() {
+      const p = currentPoint(nowMs());
+      p.marker = true;
+      perfHistory = [p];
+      saveHistory();
+    }
+
+    function addSnapshotAt(tMs, overrides) {
+      const p = Object.assign(currentPoint(tMs), overrides || {});
+      perfHistory.push(p);
+      compactHistory();
+      saveHistory();
+      return p;
+    }
+
+    // A gentle rise, a dip, then a recovery, ending at today's worth. For screenshots and tests.
+    function seedHistory(days, pattern) {
+      const now = nowMs();
+      const start = now - days * DAY_MS;
+      const endWorth = totalWorthCents();
+      const base = START_CASH_CENTS;
+      const amp = Math.round(base * 0.015);
+      const step = HOUR_MS;
+      const pts = [];
+      for (let t = start; t <= now; t += step) {
+        const x = (t - start) / (now - start);
+        let shape;
+        if (pattern === "flat") shape = 0;
+        else if (x < 0.45) shape = Math.sin((x / 0.45) * Math.PI / 2) * 1.0;
+        else if (x < 0.7) shape = 1.0 - 2.2 * Math.sin(((x - 0.45) / 0.25) * Math.PI / 2);
+        else shape = -1.2 + 1.2 * Math.sin(((x - 0.7) / 0.3) * Math.PI / 2);
+        const wobble = Math.sin(t / (9 * HOUR_MS)) * 0.025;
+        const worth = Math.round(base + (endWorth - base) * x + amp * (shape + (x > 0 && x < 1 ? wobble : 0)));
+        pts.push({ t, worthCents: worth, cashCents: wallet.cashCents, btcUnits: wallet.coins.btc.units, ethUnits: wallet.coins.eth.units });
+      }
+      pts[0].marker = true;
+      pts[0].worthCents = base;
+      pts[pts.length - 1].worthCents = endWorth;
+      pts[pts.length - 1].t = now;
+      perfHistory = pts;
+      compactHistory();
+      saveHistory();
+      return perfHistory.length;
+    }
+
+    function localMidnight(ms) {
+      const d = new Date(ms);
+      d.setHours(0, 0, 0, 0);
+      return d.getTime();
+    }
+
+    function rangePoints(key) {
+      const r = RANGES[key];
+      const now = nowMs();
+      if (!r.ms) return perfHistory.slice();
+      return perfHistory.filter((p) => p.t >= now - r.ms && p.t <= now);
+    }
+
+    function rangeChange(key) {
+      const pts = rangePoints(key);
+      if (pts.length < 2) return null;
+      const first = pts[0].worthCents;
+      const last = pts[pts.length - 1].worthCents;
+      return { cents: last - first, pct: first ? (last - first) / first * 100 : 0, from: first, to: last, points: pts.length };
+    }
+
+    // Shares that always add up to 100 (largest remainder).
+    function allocationPct(parts) {
+      const total = parts.reduce((a, b) => a + b, 0);
+      if (total <= 0) return parts.map((_, i) => (i === 0 ? 100 : 0));
+      const raw = parts.map((v) => v / total * 100);
+      const floor = raw.map(Math.floor);
+      let left = 100 - floor.reduce((a, b) => a + b, 0);
+      raw.map((v, i) => [v - floor[i], i]).sort((a, b) => b[0] - a[0]).forEach(([, i]) => {
+        if (left > 0) { floor[i] += 1; left -= 1; }
+      });
+      return floor;
+    }
+
+    function summaryData() {
+      const worth = totalWorthCents();
+      const now = nowMs();
+      const gain = worth - START_CASH_CENTS;
+      const today = perfHistory.filter((p) => p.t >= localMidnight(now) && p.t <= now);
+      let todayChangeCents = null;
+      let todayChangePct = null;
+      if (today.length >= 2 || (today.length === 1 && now - today[0].t >= SNAP_GAP_MS)) {
+        todayChangeCents = worth - today[0].worthCents;
+        todayChangePct = today[0].worthCents ? todayChangeCents / today[0].worthCents * 100 : 0;
+      }
+      const btcV = lastPrice("btc") ? holdingValueCents("btc", lastPrice("btc")) : 0;
+      const ethV = lastPrice("eth") ? holdingValueCents("eth", lastPrice("eth")) : 0;
+      const [cash, btc, eth] = allocationPct([wallet.cashCents, btcV, ethV]);
+      const rc = {};
+      for (const k of Object.keys(RANGES)) {
+        const c = rangeChange(k);
+        rc[k] = c ? c.cents : null;
+      }
+      return {
+        worthCents: worth,
+        totalGainCents: gain,
+        totalGainPct: gain / START_CASH_CENTS * 100,
+        todayChangeCents,
+        todayChangePct,
+        allocation: { cash, btc, eth },
+        values: { cash: wallet.cashCents, btc: btcV, eth: ethV },
+        rangeChange: rc
+      };
+    }
+
+    function pctString(pct) {
+      const a = Math.abs(pct);
+      if (a > 0 && a < 0.1) return a.toFixed(2) + "%";
+      return a.toFixed(1) + "%";
+    }
+
+    function changeChip(cents, pct) {
+      const word = cents > 0 ? "up" : cents < 0 ? "down" : "even";
+      const arrow = cents > 0 ? "▲" : cents < 0 ? "▼" : "•";
+      const cls = cents > 0 ? "up" : "down";
+      const sign = cents > 0 ? "+" : cents < 0 ? "−" : "";
+      return `<span class="gain ${cls}">${word} ${arrow} ${formatDollars(cents, { sign: true })} (${sign}${pctString(pct)})</span>`;
+    }
+
+    function rangeSentence(key, c) {
+      const r = RANGES[key];
+      if (!c) return "";
+      if (c.cents === 0) return `${r.phrase} your pretend money stayed even at ${formatDollars(c.to)}.`;
+      const dir = c.cents > 0 ? "went up" : "went down";
+      return `${r.phrase} your pretend money ${dir} ${formatDollars(Math.abs(c.cents))} (${pctString(c.pct)}).`;
+    }
+
+    function walletTop(active) {
+      const tab = (id, label) => `<button class="tab" type="button" role="tab" data-tab="${id}" aria-selected="${active === id}" ${active === id ? 'aria-current="page"' : ""}>${active === id ? '<span class="tab-mark" aria-hidden="true">●</span> ' : ""}${label}</button>`;
+      return `
+        <div class="chrome-top">
+          <div class="top-row wallet-top">
+            <button class="btn-back" type="button" data-back>◀ Back</button>
+            <p class="pretend">Pretend money</p>
+          </div>
+          <div class="tabs" role="tablist" aria-label="Practice wallet pages">
+            ${tab("wallet", "Wallet")}
+            ${tab("summary", "Summary")}
+          </div>
+        </div>`;
+    }
+
+    function holdingsTable() {
+      const DOT = { Bitcoin: "btc", Ethereum: "eth", Cash: "cash" };
+      const row = (name, amount, avg, value, gainHtml) => {
+        const na = (v) => (v === "—" ? " na" : "");
+        return `<tr>
+          <th scope="row" data-label="Coin"><span class="coin-cell"><span class="dot dot-${DOT[name]}" aria-hidden="true"></span>${name}</span></th>
+          <td data-label="You own" class="${na(amount).trim()}">${amount}</td>
+          <td data-label="Average cost" class="${na(avg).trim()}">${avg}</td>
+          <td data-label="Worth now" class="num">${value}</td>
+          <td data-label="Gain or loss" class="${na(gainHtml).trim()}">${gainHtml}</td>
+        </tr>`;
+      };
+      const coinRow = (id) => {
+        const c = wallet.coins[id];
+        const price = lastPrice(id);
+        if (!c.units) return row(COIN_NAME[id], "None", "—", formatDollars(0), "—");
+        const avgCents = Math.round(c.costCents * 1e8 / c.units);
+        const value = price ? holdingValueCents(id, price) : null;
+        const g = value != null ? value - c.costCents : null;
+        const gainHtml = g == null ? "Price updating" : changeChip(g, c.costCents ? g / c.costCents * 100 : 0);
+        return row(COIN_NAME[id], formatCoins(c.units), formatDollars(avgCents), value != null ? formatDollars(value) : "Price updating", gainHtml);
+      };
+      return `<table class="hold-table">
+        <caption class="sr-only">What you own</caption>
+        <thead><tr><th scope="col">Coin</th><th scope="col">Amount</th><th scope="col">Average cost</th><th scope="col">Value now</th><th scope="col">Gain or loss</th></tr></thead>
+        <tbody>
+          ${coinRow("btc")}
+          ${coinRow("eth")}
+          ${row("Cash", "—", "—", formatDollars(wallet.cashCents), "—")}
+        </tbody>
+      </table>`;
+    }
+
+    function allocationBlock(s) {
+      const parts = [
+        { id: "cash", name: "Cash", pct: s.allocation.cash },
+        { id: "btc", name: "Bitcoin", pct: s.allocation.btc },
+        { id: "eth", name: "Ethereum", pct: s.allocation.eth }
+      ];
+      const text = parts.map((p) => `${p.name} ${p.pct}%`).join(" · ");
+      const visual = [parts[1], parts[2], parts[0]];
+      const bar = visual.filter((p) => p.pct > 0).map((p) =>
+        `<span class="seg seg-${p.id}" style="width:${p.pct}%" data-pct="${p.pct}" title="${p.name} ${p.pct}%">${p.pct >= 12 ? `<span class="seg-label">${p.name}</span>` : ""}</span>`
+      ).join("");
+      const legend = visual.map((p) => `<li><span class="swatch seg-${p.id}" aria-hidden="true"></span><span class="l-name">${p.id === "cash" ? "Cash you can use" : p.name}</span><span class="l-val"><b>${p.pct}%</b> · ${formatDollars(s.values[p.id])}</span></li>`).join("");
+      return `<h2 class="wallet-h">How your money is split</h2>
+        <div class="alloc-bar" role="img" aria-label="${escapeHtml(text)}">${bar}</div>
+        <p class="alloc-text sr-only" data-alloc-text>${escapeHtml(text)}</p>
+        <ul class="alloc-legend" aria-hidden="true">${legend}</ul>`;
+    }
+
+    function chartBlock() {
+      const key = summaryRange;
+      const r = RANGES[key];
+      const pts = rangePoints(key);
+      const buttons = Object.keys(RANGES).map((k) =>
+        `<button class="range-btn" type="button" data-range="${k}" aria-pressed="${k === key}" aria-label="${RANGES[k].label}">${k}</button>`
+      ).join("");
+      let body;
+      if (pts.length < 2) {
+        body = `<div class="chart-empty"><p>Your chart will fill in as you visit. Check back tomorrow.</p></div>`;
+      } else {
+        const now = nowMs();
+        const t0 = r.ms ? now - r.ms : pts[0].t;
+        const t1 = r.ms ? now : pts[pts.length - 1].t;
+        const vals = pts.map((p) => p.worthCents).concat([START_CASH_CENTS]);
+        let lo = Math.min.apply(null, vals);
+        let hi = Math.max.apply(null, vals);
+        const pad = Math.max(Math.round((hi - lo) * 0.12), 500);
+        lo -= pad; hi += pad;
+        const W = 600, H = 240;
+        const x = (t) => ((t - t0) / Math.max(1, t1 - t0)) * W;
+        const y = (v) => H - ((v - lo) / (hi - lo)) * H;
+        const d = pts.map((p, i) => (i ? "L" : "M") + x(p.t).toFixed(1) + " " + y(p.worthCents).toFixed(1)).join(" ");
+        const by = y(START_CASH_CENTS).toFixed(1);
+        const c = rangeChange(key);
+        const left = r.left || new Date(pts[0].t).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+        body = `<div class="chart-wrap">
+            <div class="chart-axis"><span>${formatDollars(Math.round(hi / 100) * 100)}</span><span>${formatDollars(Math.round(lo / 100) * 100)}</span></div>
+            <svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="${escapeHtml(rangeSentence(key, c))}">
+              <defs><linearGradient id="cg-area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2A1FB8" stop-opacity="0.12"/><stop offset="1" stop-color="#2A1FB8" stop-opacity="0"/></linearGradient></defs>
+              <path d="${d} L${x(pts[pts.length - 1].t).toFixed(1)} ${H} L${x(pts[0].t).toFixed(1)} ${H} Z" class="chart-area" fill="url(#cg-area)"/>
+              <line x1="0" x2="${W}" y1="${by}" y2="${by}" class="chart-base" vector-effect="non-scaling-stroke"/>
+              <path d="${d}" class="chart-line" vector-effect="non-scaling-stroke"/>
+            </svg>
+          </div>
+          <div class="chart-foot"><span>${escapeHtml(left)}</span><span>Now</span></div>
+          <p class="chart-key"><span class="key-dash" aria-hidden="true"></span> Started with $10,000</p>
+          <p class="chart-sentence" data-range-sentence>${escapeHtml(rangeSentence(key, c))}</p>`;
+      }
+      return `<h2 class="wallet-h">Your pretend money over time</h2>
+        <div class="ranges" role="group" aria-label="Time range">${buttons}</div>
+        ${body}`;
+    }
+
+    function renderSummary() {
+      const notice = walletNotice();
+      const s = summaryData();
+      const noticeHtml = noticeMarkup(notice);
+      const lastKnown = notice && ((prices.btc && prices.btc.value != null) || (prices.eth && prices.eth.value != null))
+        ? `<p class="updated">These use the last known prices.</p>` : "";
+      const updated = updatedLabel();
+      const updatedHtml = updated ? `<p class="updated">${escapeHtml("Prices " + updated.charAt(0).toLowerCase() + updated.slice(1))}</p>` : "";
+      const today = s.todayChangeCents == null
+        ? `<p class="stat-note">Not enough history yet</p>`
+        : `<p>${changeChip(s.todayChangeCents, s.todayChangePct)}</p>`;
+      return `
+        ${walletTop("summary")}
+        <div class="pane summary">
+          ${noticeHtml}
+          <div class="card">
+            <p class="overline">Your pretend balance</p>
+            <p class="money money-lg" data-sum-worth>${formatDollars(s.worthCents)}</p>
+            ${lastKnown}
+            ${updatedHtml}
+            <div class="stat-grid">
+              <div class="stat-block">
+                <p class="stat-label">Gain or loss since you started</p>
+                <p data-sum-gain>${changeChip(s.totalGainCents, s.totalGainPct)}</p>
+              </div>
+              <div class="stat-block">
+                <p class="stat-label">Today’s change</p>
+                ${today}
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            ${chartBlock()}
+          </div>
+          <div class="card">
+            <h2 class="wallet-h">What you own</h2>
+            ${holdingsTable()}
+            <div class="card-split">
+              ${allocationBlock(s)}
+            </div>
+          </div>
+          <p class="updated">Practice only. No real money.</p>
+        </div>
+        <div class="actions">
+          <button class="btn-primary" type="button" data-tab="wallet">Go to Wallet to buy or sell</button>
+        </div>
+      `;
+    }
+
+    function runDashboardCases() {
+      const results = [];
+      function pass(n, ok, detail) { results.push({ n, ok, detail: detail || (ok ? "pass" : "fail") }); }
+      const saved = {
+        wallet: snapshotWallet(), whist: wallet.history, prices, feed: { ...feedControl },
+        perf: perfHistory, fakeNow, range: summaryRange, view: state.view,
+        rawState: localStorage.getItem(STORAGE_KEY), rawHist: localStorage.getItem(HIST_KEY)
+      };
+      const strip = (html) => html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
+      try {
+        const base = new Date(2026, 10, 20, 15, 0, 0).getTime();
+        const fresh = () => {
+          wallet = defaultWallet(); wallet.history = [];
+          prices = defaultPrices(); prices.pinned = true;
+          perfHistory = []; fakeNow = base;
+          acceptPrices({ btc: 60000, eth: 2000, source: "test" }, Date.now());
+        };
+
+        // D1
+        fresh();
+        let s = summaryData();
+        let html = strip(renderSummary());
+        pass("D1", s.worthCents === 1000000 && s.totalGainCents === 0 && s.todayChangeCents === null &&
+          html.includes("$10,000.00") && html.includes("$0.00 (0.0%)") && html.includes("Not enough history yet"),
+          `worth=${s.worthCents} gain=${s.totalGainCents} today=${s.todayChangeCents}`);
+
+        // D2
+        fresh();
+        applyBuy("btc", 10000, 60000);
+        acceptPrices({ btc: 66000, eth: 2000, source: "test" }, Date.now());
+        s = summaryData();
+        const walletHtml = strip(renderWalletHome());
+        html = strip(renderSummary());
+        const rowVal = holdingValueCents("btc", 66000);
+        const rowGain = rowVal - wallet.coins.btc.costCents;
+        pass("D2", s.worthCents === 1000944 && s.totalGainCents === 944 && rowVal === 10944 && rowGain === 944 &&
+          walletHtml.includes("$10,009.44") && html.includes("$10,009.44") &&
+          walletHtml.includes("$109.44") && html.includes("$109.44") && walletHtml.includes("+$9.44") && html.includes("+$9.44"),
+          `worth=${s.worthCents} gain=${s.totalGainCents} row=${rowVal} rowGain=${rowGain} (wallet screen agrees)`);
+
+        // D3
+        let d3ok = true; let d3info = [];
+        const mixes = [[0, 0], [10000, 0], [10000, 5000], [333333, 333333], [999000, 0], [1, 1]];
+        for (const [b, e] of mixes) {
+          fresh();
+          if (b) applyBuy("btc", b, 60000);
+          if (e) applyBuy("eth", e, 2000);
+          s = summaryData();
+          const a = s.allocation;
+          const sum = a.cash + a.btc + a.eth;
+          const div = document.createElement("div");
+          div.innerHTML = allocationBlock(s);
+          const segs = Array.from(div.querySelectorAll(".seg")).reduce((t, el) => t + Number(el.getAttribute("data-pct")), 0);
+          const text = div.querySelector("[data-alloc-text]").textContent;
+          const want = `Cash ${a.cash}% · Bitcoin ${a.btc}% · Ethereum ${a.eth}%`;
+          const ok = sum === 100 && segs === 100 && text === want;
+          if (!ok) d3ok = false;
+          d3info.push(`${a.cash}/${a.btc}/${a.eth}`);
+        }
+        pass("D3", d3ok, "splits " + d3info.join(", ") + " all sum to 100 and match the text");
+
+        // D4
+        fresh();
+        applyBuy("btc", 100000, 60000);
+        acceptPrices({ btc: 63000, eth: 2000, source: "test" }, Date.now());
+        seedHistory(10);
+        const now = nowMs();
+        const check = (k, ms) => {
+          const pts = perfHistory.filter((p) => p.t >= now - ms && p.t <= now);
+          const want = pts[pts.length - 1].worthCents - pts[0].worthCents;
+          return { want, got: summaryData().rangeChange[k] };
+        };
+        const w = check("1W", 7 * DAY_MS);
+        const m = check("1M", 30 * DAY_MS);
+        summaryRange = "1W";
+        const sentW = strip(chartBlock());
+        const cW = rangeChange("1W");
+        const sentOk = sentW.includes(rangeSentence("1W", cW)) && rangeSentence("1W", cW).includes(formatDollars(Math.abs(w.want)));
+        pass("D4", w.got === w.want && m.got === m.want && m.got === summaryData().rangeChange.All && sentOk,
+          `1W ${w.got}=${w.want}, 1M ${m.got}=${m.want}, points=${perfHistory.length}, sentence "${rangeSentence("1W", cW)}"`);
+
+        // D5
+        fresh();
+        onPricesRefreshed();
+        fakeNow = base + 60 * 1000;
+        onPricesRefreshed();
+        const afterTwo = perfHistory.length;
+        fakeNow = base + 2 * 60 * 1000;
+        applyBuy("btc", 10000, 60000);
+        recordSnapshot(true);
+        const afterTrade = perfHistory.length;
+        fakeNow = base + 8 * 60 * 1000;
+        onPricesRefreshed();
+        pass("D5", afterTwo === 1 && afterTrade === 2 && perfHistory.length === 3,
+          `two refreshes 1 min apart -> ${afterTwo} point, trade -> ${afterTrade}, refresh 6 min after the trade -> ${perfHistory.length}`);
+
+        // D6
+        fresh();
+        const sv = { started: state.started, done: state.done, answers: state.answers, progress: state.progress };
+        state.started = { "what-is-bitcoin": true, "keeping-it-safe": true };
+        state.done = { "what-is-bitcoin": true };
+        state.answers = { "what-is-bitcoin": { 0: 1, 1: 0 } };
+        persistAll();
+        applyBuy("btc", 10000, 60000);
+        persistWallet();
+        seedHistory(5);
+        const lessonsOf = (raw) => { const o = JSON.parse(raw || "{}"); delete o.wallet; return JSON.stringify(o); };
+        const before = lessonsOf(localStorage.getItem(STORAGE_KEY));
+        applyStartOver();
+        resetHistory();
+        persistWallet();
+        const after = lessonsOf(localStorage.getItem(STORAGE_KEY));
+        const stored = JSON.parse(localStorage.getItem(HIST_KEY));
+        const ok6 = before === after && perfHistory.length === 1 && perfHistory[0].marker === true &&
+          perfHistory[0].worthCents === 1000000 && stored.length === 1 && wallet.cashCents === 1000000;
+        state.started = sv.started; state.done = sv.done; state.answers = sv.answers; state.progress = sv.progress;
+        pass("D6", ok6, `history=${perfHistory.length} marker=${perfHistory[0] && perfHistory[0].marker} lessons unchanged=${before === after}`);
+
+        // P: price display
+        fresh();
+        acceptPrices({ btc: 59223.315, eth: 2345.6789, source: "test" }, Date.now());
+        applyBuy("btc", 12345, 59223.315);
+        const texts = [formatPrice(59223.315), strip(renderWalletHome()), strip(renderSummary()), strip(renderConfirmProbe())];
+        const bad = texts.join(" ").match(/\$[\d,]+\.\d{3,}/g);
+        pass("P", formatPrice(59223.315) === "$59,223.32" && !bad,
+          `formatPrice(59223.315)=${formatPrice(59223.315)} longest-decimals=${bad ? bad.join(",") : "none over 2"}`);
+      } catch (e) {
+        pass("D?", false, "error " + e.message);
+      } finally {
+        restoreSnapshot(saved.wallet);
+        wallet.history = saved.whist;
+        prices = saved.prices;
+        feedControl = saved.feed;
+        perfHistory = saved.perf;
+        fakeNow = saved.fakeNow;
+        summaryRange = saved.range;
+        state.view = saved.view;
+        if (saved.rawState == null) localStorage.removeItem(STORAGE_KEY); else localStorage.setItem(STORAGE_KEY, saved.rawState);
+        if (saved.rawHist == null) localStorage.removeItem(HIST_KEY); else localStorage.setItem(HIST_KEY, saved.rawHist);
+      }
+      return results;
+    }
+
+    // ---------- Slice 3a lesson cases (L1-L4) ----------
+    function runLessonCases() {
+      const results = [];
+      function pass(n, ok, detail) { results.push({ n, ok, detail: detail || (ok ? "pass" : "fail") }); }
+      const rawBefore = localStorage.getItem(STORAGE_KEY);
+      const stateBefore = JSON.parse(JSON.stringify(state));
+      const progBefore = JSON.parse(JSON.stringify(lessonProgress));
+      const textOf = (html) => { const d = document.createElement("div"); d.innerHTML = html; return d.textContent.replace(/\s+/g, " ").trim(); };
+      const exact = (html, sel) => { const d = document.createElement("div"); d.innerHTML = html; const el = d.querySelector(sel); return el ? el.textContent : null; };
+      const blank = () => Object.assign(defaultState(), { started: {}, done: {}, answers: {}, progress: {} });
+      const resetLessonProgress = () => { for (const k of Object.keys(lessonProgress)) delete lessonProgress[k]; };
+      try {
+        // L1: every lesson renders, Next/Back reach every screen, every quiz option gives the right feedback.
+        let screens = 0, options = 0, rightOk = 0, wrongOk = 0, bad = [];
+        for (let li = 0; li < lessons.length; li++) {
+          const lesson = lessons[li];
+          for (let si = 0; si < lesson.screens.length; si++) {
+            state = blank(); resetLessonProgress();
+            state.view = "lesson"; state.lessonId = lesson.id; state.screen = si;
+            const html = renderLesson();
+            const shown = exact(html, ".screen-text p");
+            if (shown !== lesson.screens[si] || !html.includes("Lesson " + (li + 1) + " of " + lessons.length) ||
+                !html.includes("Screen " + (si + 1) + " of " + lesson.screens.length) || !html.includes("data-next-screen")) bad.push(lesson.id + " screen " + (si + 1));
+            screens++;
+          }
+          for (let qi = 0; qi < lesson.quiz.length; qi++) {
+            const q = lesson.quiz[qi];
+            for (let oi = 0; oi < q.options.length; oi++) {
+              state = blank(); resetLessonProgress();
+              state.view = "quiz"; state.lessonId = lesson.id; state.quizIndex = qi;
+              const before = renderQuiz();
+              if (exact(before, ".quiz-q") !== q.q || before.includes("data-next-quiz")) bad.push(lesson.id + " q" + (qi + 1) + " pre");
+              chooseOption(oi);
+              const html = renderQuiz();
+              const fb = exact(html, ".feedback");
+              const fbText = fb == null ? "" : fb.replace(/\s+/g, " ");
+              const ok = oi === q.answer;
+              const want = ok ? "✓ That's right" : "Not quite. Here's why…";
+              if (!fbText.includes(want) || !fbText.includes(q.explanation) || (ok ? fbText.includes("Not quite") : fbText.includes("That's right")) || !html.includes("data-next-quiz")) bad.push(lesson.id + " q" + (qi + 1) + " opt" + (oi + 1));
+              if (ok) rightOk++; else wrongOk++;
+              options++;
+            }
+          }
+        }
+        pass("L1", bad.length === 0 && lessons.length === 12,
+          `${lessons.length} lessons, ${screens} screens rendered with "Lesson N of 12", ${options} quiz options answered (${rightOk} correct + ${wrongOk} wrong feedback ok)${bad.length ? ", problems: " + bad.slice(0, 5).join("; ") : ""}`);
+
+        // L2: migrate seeded v1 progress (v1 shape: no new fields) - nothing lost.
+        const v1Done = JSON.stringify({
+          view: "home", lessonId: null, screen: 0, quizIndex: 0, selected: null, revealed: false,
+          started: { "what-is-bitcoin": true, "spotting-scams": true, "buying-and-selling": true },
+          done: { "what-is-bitcoin": true, "spotting-scams": true, "buying-and-selling": true },
+          answers: { "what-is-bitcoin": { 0: 2, 1: 1, 2: 1 }, "spotting-scams": { 0: 1, 1: 1, 2: 1 }, "buying-and-selling": { 0: 0, 1: 1, 2: 1 } },
+          progress: { "what-is-bitcoin": { screen: 6, quizIndex: 2, selected: 1, revealed: true, view: "quiz" }, "spotting-scams": { screen: 7, quizIndex: 2, selected: 1, revealed: true, view: "quiz" }, "buying-and-selling": { screen: 6, quizIndex: 2, selected: 1, revealed: true, view: "quiz" } },
+          wallet: { cashCents: 980000, coins: { btc: { units: 165833, costCents: 10000 }, eth: { units: 500000, costCents: 10000 } }, history: [] }
+        });
+        const v1Mid = JSON.stringify({
+          view: "lesson", lessonId: "buying-and-selling", screen: 3, quizIndex: 0, selected: null, revealed: false,
+          started: { "what-is-bitcoin": true, "spotting-scams": true, "buying-and-selling": true },
+          done: { "what-is-bitcoin": true, "spotting-scams": true },
+          answers: { "what-is-bitcoin": { 0: 2, 1: 1, 2: 1 }, "spotting-scams": { 0: 1, 1: 1, 2: 1 }, "buying-and-selling": {} },
+          progress: { "buying-and-selling": { screen: 3, quizIndex: 0, selected: null, revealed: false, view: "lesson" } },
+          wallet: { cashCents: 980000, coins: { btc: { units: 165833, costCents: 10000 }, eth: { units: 500000, costCents: 10000 } }, history: [] }
+        });
+        const checkMigration = (raw, expect) => {
+          localStorage.setItem(STORAGE_KEY, raw);
+          const m = loadState();
+          const src = JSON.parse(raw);
+          const keep = ["started", "done", "answers", "progress"].every((k) => JSON.stringify(m[k]) === JSON.stringify(src[k]));
+          const w = normalizeWallet(m.wallet);
+          const walletOk = w.cashCents === src.wallet.cashCents && w.coins.btc.units === src.wallet.coins.btc.units && w.coins.eth.units === src.wallet.coins.eth.units && w.coins.btc.costCents === 10000;
+          const st = Object.assign(blank(), m);
+          const statuses = lessons.map((l) => lessonStatusFor(st, l));
+          return keep && walletOk && m.view === src.view && JSON.stringify(statuses) === JSON.stringify(expect(statuses)) && doneCountFor(st) === Object.keys(src.done).length;
+        };
+        const okDone = checkMigration(v1Done, () => ["Done", "Done", "Done"].concat(Array(9).fill("Not started")));
+        const okMid = checkMigration(v1Mid, () => ["Done", "Done", "4 of 7 screens"].concat(Array(9).fill("Not started")));
+        pass("L2", okDone && okMid,
+          `v1 all-3-done: kept done/started/answers/progress/wallet, 1-3 Done, 4-12 Not started = ${okDone}; v1 mid-lesson (lesson 3, screen 4 of 7): kept, shows "4 of 7 screens", 4-12 Not started = ${okMid}`);
+
+        // L3: exactly one "Start here" on the first not-done lesson; the count is right.
+        const checkHome = (done, wantNext, wantCount, mid, wantChip = "Start here") => {
+          state = blank(); resetLessonProgress(); state.done = done;
+          if (mid) { state.started = { [mid]: true }; state.progress = { [mid]: { view: "lesson", screen: 3 } }; }
+          const html = renderHome();
+          const d = document.createElement("div"); d.innerHTML = html;
+          const allChips = d.querySelectorAll(".chip");
+          const chips = [...allChips].filter((c) => c.textContent.trim() === wantChip);
+          if (allChips.length !== chips.length) return false;
+          const nexts = d.querySelectorAll(".lesson-card.is-next");
+          const where = chips.length === 1 ? chips[0].closest(".lesson-card").getAttribute("data-lesson-number") : null;
+          const card = d.querySelector("[data-progress-card]").textContent;
+          const doneCards = d.querySelectorAll(".lesson-card.is-done").length;
+          const bar = d.querySelector(".progress-bar").getAttribute("aria-valuenow");
+          return chips.length === (wantNext ? 1 : 0) && nexts.length === chips.length && String(where) === String(wantNext) &&
+            card === "You've finished " + wantCount + " of 12 lessons" && doneCards === wantCount && bar === String(Math.round(wantCount / 12 * 100)) && d.querySelectorAll(".lesson-card").length === 12;
+        };
+        const ids = lessons.map((l) => l.id);
+        const dn = (nums) => Object.fromEntries(nums.map((n) => [ids[n - 1], true]));
+        const h0 = checkHome({}, 1, 0);
+        const h3 = checkHome(dn([1, 2, 3]), 4, 3);
+        const hGap = checkHome(dn([1, 2, 3, 5, 6]), 4, 5);
+        const hCont = checkHome(dn([1, 2, 3]), 4, 3, ids[3], "Continue here");
+        const hAll = checkHome(dn([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]), null, 12);
+        const gl = [...(() => { const d = document.createElement("div"); d.innerHTML = renderHome(); return d.querySelectorAll(".group-label"); })()].map((e) => e.textContent).join("|");
+        pass("L3", h0 && h3 && hGap && hCont && hAll && gl === "THE BASICS|KEEPING MONEY SAFE|ETHEREUM|PRACTICE",
+          `0 done -> Start here on 1, "0 of 12" ${h0}; 3 done -> Start here on 4, "3 of 12" ${h3}; 1,2,3,5,6 done -> Start here on 4 only ${hGap}; 3 done + lesson 4 on screen 4 -> Continue here on 4 only ${hCont}; all done -> no Start here ${hAll}; groups ${gl}`);
+
+        // L4: lesson text on the page equals the lessons.json copy, field by field.
+        let n4 = 0, bad4 = [];
+        const hashOf = (str) => { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h.toString(16); };
+        state = blank(); resetLessonProgress();
+        const homeD = document.createElement("div"); homeD.innerHTML = renderHome();
+        const titles = [...homeD.querySelectorAll(".lesson-title")].map((e) => e.textContent);
+        lessons.forEach((l, i) => {
+          if (titles[i + 1] !== l.title) bad4.push(l.id + " title");
+          n4++;
+          l.screens.forEach((t, si) => { state.view = "lesson"; state.lessonId = l.id; state.screen = si; if (exact(renderLesson(), ".screen-text p") !== t) bad4.push(l.id + " s" + si); n4++; });
+          l.quiz.forEach((q, qi) => {
+            if (!(Number.isInteger(q.answer) && q.answer >= 0 && q.answer < q.options.length)) bad4.push(l.id + " answer q" + qi);
+            state.view = "quiz"; state.lessonId = l.id; state.quizIndex = qi; state.selected = null; state.revealed = false;
+            const h = renderQuiz(); const dd = document.createElement("div"); dd.innerHTML = h;
+            const opts = [...dd.querySelectorAll(".option")].map((e) => e.textContent);
+            if (exact(h, ".quiz-q") !== q.q || JSON.stringify(opts) !== JSON.stringify(q.options)) bad4.push(l.id + " q" + qi);
+            n4++;
+          });
+        });
+        const idsOk = JSON.stringify(ids) === JSON.stringify(["what-is-bitcoin", "spotting-scams", "buying-and-selling", "how-blockchain-works", "wallets-and-keys", "why-prices-swing", "stablecoins", "what-is-ethereum", "ethereum-vs-bitcoin", "gas-fees", "ethereum-scams", "using-the-practice-wallet"]);
+        pass("L4", bad4.length === 0 && idsOk && LESSONS.version === 2,
+          `version ${LESSONS.version}, ${lessons.length} lessons, ${n4} titles/screens/questions+options match the embedded lessons.json copy exactly, ids ${idsOk ? "ok" : "WRONG"}, data hash ${hashOf(JSON.stringify(LESSONS))}${bad4.length ? ", problems: " + bad4.slice(0, 5).join("; ") : ""}`);
+      } catch (e) {
+        pass("L?", false, "error " + e.message);
+      } finally {
+        state = stateBefore;
+        resetLessonProgress(); Object.assign(lessonProgress, progBefore);
+        if (rawBefore == null) localStorage.removeItem(STORAGE_KEY); else localStorage.setItem(STORAGE_KEY, rawBefore);
+        render();
+      }
+      return results;
+    }
+
+
+    function renderConfirmProbe() {
+      const keep = tradeDraft;
+      try {
+        return ["buy", "sell"].map((side) => {
+          const p = { side, coin: "btc", amountCents: 5000, sellAll: side === "sell", price: 59223.315, feeCents: 25, units: 84000, proceedsCents: 4974 };
+          return confirmSentence(p);
+        }).join(" ");
+      } finally { tradeDraft = keep; }
+    }
+
     function renderWalletHome() {
       const notice = walletNotice();
       const btcP = livePrice("btc");
@@ -1481,6 +2675,7 @@
         const worth = price ? holdingValueCents(id, price) : null;
         const worthText = worth != null ? "worth about " + formatDollars(worth) + " now" : "price updating";
         return `<div class="hold-card">
+          <p class="coin-line"><span class="dot dot-${id}" aria-hidden="true"></span>${COIN_NAME[id]}</p>
           <p>You own ${formatCoins(c.units)} ${COIN_NAME[id]}, ${worthText}.</p>
           ${price ? gainLine(id, price) : ""}
         </div>`;
@@ -1496,25 +2691,24 @@
         ? `<p class="price-line">Bitcoin ${formatPrice(btcP)} · Ethereum ${formatPrice(ethP)}</p><p class="updated">${escapeHtml(updatedLabel())}</p>`
         : "";
 
-      const noticeHtml = notice ? `<div class="notice ${notice.kind}" role="status">${escapeHtml(notice.text)}</div>` : "";
+      const noticeHtml = noticeMarkup(notice);
       const sellDisabled = !tradable || !hasCoins;
       const buyDisabled = !tradable;
       const sellReason = !tradable ? "" : !hasCoins ? "<p class=\"updated\">You don’t have any coins to sell yet.</p>" : "";
 
       return `
-        <div class="chrome-top">
-          ${backRow()}
-          <p class="pretend">Pretend money</p>
-        </div>
+        ${walletTop("wallet")}
         <div class="pane">
           ${noticeHtml}
-          <div class="stat-block">
-            <p class="stat-label">Total worth</p>
-            <p class="money money-lg">${formatDollars(totalWorthCents())}</p>
-          </div>
-          <div class="stat-block">
-            <p class="stat-label">Cash</p>
-            <p class="money money-lg">${formatDollars(wallet.cashCents)}</p>
+          <div class="card">
+            <div class="stat-block">
+              <p class="overline">Total worth</p>
+              <p class="money money-lg">${formatDollars(totalWorthCents())}</p>
+            </div>
+            <div class="stat-block">
+              <p class="stat-label">Cash</p>
+              <p class="money money-md">${formatDollars(wallet.cashCents)}</p>
+            </div>
           </div>
           ${holdings}
           ${priceLines}
@@ -1561,12 +2755,11 @@
 
       return `
         <div class="chrome-top">
-          ${backRow()}
-          <p class="pretend">Pretend money</p>
+          ${backRow(true)}
         </div>
         <div class="pane">
           <h2 class="wallet-h">${buying ? "Buy" : "Sell"} ${escapeHtml(name)}</h2>
-          ${notice ? `<div class="notice ${notice.kind}" role="status">${escapeHtml(notice.text)}</div>` : ""}
+          ${noticeMarkup(notice)}
           <p class="field-label">Which coin?</p>
           <div class="coin-pick">
             <button class="option" type="button" data-coin="btc" aria-pressed="${d.coin === "btc"}">Bitcoin${price && d.coin==="btc" ? " · " + formatPrice(livePrice("btc")) : ""}</button>
@@ -1591,13 +2784,14 @@
       const yes = preview.side === "buy" ? "Yes, buy" : "Yes, sell";
       return `
         <div class="chrome-top">
-          ${backRow()}
-          <p class="pretend">Pretend money</p>
+          ${backRow(true)}
         </div>
         <div class="pane">
           <h2 class="wallet-h">Please confirm</h2>
-          <p class="screen-text">${escapeHtml(confirmSentence(preview))}</p>
-          <p class="fee-line">Fee: ${formatDollars(preview.feeCents)}</p>
+          <div class="card">
+            <p class="screen-text">${escapeHtml(confirmSentence(preview))}</p>
+            <p class="fee-line">Fee: ${formatDollars(preview.feeCents)}</p>
+          </div>
         </div>
         <div class="actions">
           <button class="btn-primary" type="button" data-yes-trade>${yes}</button>
@@ -1609,12 +2803,13 @@
     function renderStartOver() {
       return `
         <div class="chrome-top">
-          ${backRow()}
-          <p class="pretend">Pretend money</p>
+          ${backRow(true)}
         </div>
         <div class="pane">
           <h2 class="wallet-h">Are you sure?</h2>
-          <p class="screen-text">This clears your practice wallet. Your lessons stay.</p>
+          <div class="card">
+            <p class="screen-text">This clears your practice wallet. Your lessons stay.</p>
+          </div>
         </div>
         <div class="actions">
           <button class="btn-primary" type="button" data-yes-startover>Yes, start over</button>
@@ -1756,40 +2951,98 @@
       wallet = normalizeWallet(_pendingWallet);
     }
 
+    const LESSON_GROUPS = [
+      { label: "THE BASICS", from: 0, to: 4 },
+      { label: "KEEPING MONEY SAFE", from: 4, to: 7 },
+      { label: "ETHEREUM", from: 7, to: 11 },
+      { label: "PRACTICE", from: 11, to: 12 }
+    ];
+
+    // Status text for one lesson given a state object (never colour alone).
+    function lessonStatusFor(st, lesson) {
+      if (st.done && st.done[lesson.id]) return "Done";
+      const saved = (st.progress && st.progress[lesson.id]) || null;
+      const started = !!(st.started && st.started[lesson.id]);
+      if (!started && !saved) return "Not started";
+      const view = saved && saved.view;
+      const n = lesson.screens.length;
+      if (view === "quiz" || view === "complete" || (view === "lesson" && (saved.screen || 0) >= n)) {
+        const q = Math.min((saved && saved.quizIndex) || 0, lesson.quiz.length - 1) + 1;
+        return "Quiz, question " + q + " of " + lesson.quiz.length;
+      }
+      const sc = Math.min((saved && saved.screen) || 0, n - 1) + 1;
+      return sc + " of " + n + " screens";
+    }
+
+    function nextLessonFor(st) {
+      return lessons.find((l) => !(st.done && st.done[l.id])) || null;
+    }
+
+    function doneCountFor(st) {
+      return lessons.filter((l) => st.done && st.done[l.id]).length;
+    }
+
     function renderHome() {
-      const items = lessons.map((lesson, i) => {
-        const status = statusFor(lesson.id);
+      const next = nextLessonFor(state);
+      const finished = doneCountFor(state);
+      const row = (lesson, i) => {
+        const done = !!state.done[lesson.id];
+        const isNext = !!next && next.id === lesson.id;
+        const status = lessonStatusFor(state, lesson);
+        const cls = "lesson-card" + (done ? " is-done" : "") + (isNext ? " is-next" : "");
         return `<li>
-          <button class="lesson-card" type="button" data-open="${lesson.id}">
-            <span class="lesson-kicker">Lesson ${i + 1} of ${lessons.length}</span>
-            <span class="lesson-title">${escapeHtml(lesson.title)}</span>
-            <span class="lesson-status">${status}</span>
+          <button class="${cls}" type="button" data-open="${lesson.id}" data-lesson-number="${i + 1}">
+            <span class="num" aria-hidden="true">${done ? "✓" : i + 1}</span>
+            <span class="lesson-text">
+              <span class="sr-only">Lesson ${i + 1}: </span>
+              <span class="lesson-title">${escapeHtml(lesson.title)}</span>
+              <span class="lesson-status">${escapeHtml(status)}</span>
+              ${isNext ? `<span class="chip">${status === "Not started" ? "Start here" : "Continue here"}</span>` : ""}
+            </span>
+            <span class="chev" aria-hidden="true">▶</span>
           </button>
         </li>`;
+      };
+      const groups = LESSON_GROUPS.map((g, gi) => {
+        const rows = lessons.slice(g.from, g.to).map((l, k) => row(l, g.from + k)).join("");
+        if (!rows) return "";
+        return `<section class="group" aria-labelledby="group-${gi}">
+          <h3 class="group-label" id="group-${gi}">${g.label}</h3>
+          <ul class="lesson-list">${rows}</ul>
+        </section>`;
       }).join("");
+      const pct = Math.round(finished / lessons.length * 100);
+      const label = "You've finished " + finished + " of " + lessons.length + " lessons";
 
       return `
         <div class="pane">
+          <h2 class="sr-only">Lessons</h2>
           <p class="how">You can stop at any time and come back later. Your place is saved on this device.</p>
           <button class="wallet-entry" type="button" data-open-wallet>
             <span class="lesson-kicker">Practice wallet</span>
             <span class="lesson-title">Try buying and selling with pretend money</span>
           </button>
-          <ul class="lesson-list">${items}</ul>
+          <div class="card progress-card">
+            <p class="progress-label" data-progress-card>${label}</p>
+            <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="${label}"><span style="width:${pct}%"></span></div>
+          </div>
+          ${groups}
         </div>
       `;
     }
 
-    function progressBlock(label, ratio) {
+    function progressBlock(label, ratio, lesson) {
       const pct = Math.max(0, Math.min(100, Math.round(ratio * 100)));
+      const over = lesson ? `<p class="overline">Lesson ${lessonIndex(lesson.id) + 1} of ${lessons.length}</p>` : "";
       return `<div class="progress-wrap">
+        ${over}
         <p class="progress-label">${escapeHtml(label)}</p>
         <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="${escapeHtml(label)}"><span style="width:${pct}%"></span></div>
       </div>`;
     }
 
-    function backRow() {
-      return `<div class="top-row"><button class="btn-back" type="button" data-back>◀ Back</button></div>`;
+    function backRow(withPill) {
+      return `<div class="top-row"><button class="btn-back" type="button" data-back>◀ Back</button>${withPill ? '<p class="pretend">Pretend money</p>' : ""}</div>`;
     }
 
     function renderLesson() {
@@ -1799,7 +3052,7 @@
       const text = lesson.screens[state.screen];
       const isScam = lesson.id === "spotting-scams";
       const icon = (state.screen === 0 && ICONS[lesson.id]) ? ICONS[lesson.id] : "";
-      const body = `<div class="screen-text"><p>${escapeHtml(text)}</p></div>`;
+      const body = `<div class="screen-text${isScam ? "" : " card"}"><p>${escapeHtml(text)}</p></div>`;
       const content = isScam
         ? `<div class="caution"><p class="kicker">A careful note</p>${body}</div>`
         : body;
@@ -1807,7 +3060,7 @@
       return `
         <div class="chrome-top">
           ${backRow()}
-          ${progressBlock("Screen " + n + " of " + total, n / total)}
+          ${progressBlock("Screen " + n + " of " + total, n / total, lesson)}
         </div>
         <div class="pane">
           <h2 class="sr-only">${escapeHtml(lesson.title)}</h2>
@@ -1840,7 +3093,7 @@
       if (state.revealed) {
         const ok = state.selected === q.answer;
         feedback = `<div class="feedback ${ok ? "correct" : "wrong"}" role="status">
-          <strong>${ok ? "That's right" : "Not quite. Here's why…"}</strong>
+          <strong>${ok ? "✓ That's right" : "Not quite. Here's why…"}</strong>
           <p>${escapeHtml(q.explanation)}</p>
         </div>`;
       }
@@ -1848,7 +3101,7 @@
       return `
         <div class="chrome-top">
           ${backRow()}
-          ${progressBlock("Question " + n + " of " + total, n / total)}
+          ${progressBlock("Question " + n + " of " + total, n / total, lesson)}
           <h2 class="quiz-q">${escapeHtml(q.q)}</h2>
         </div>
         <div class="pane">
@@ -1869,7 +3122,8 @@
           ${backRow()}
         </div>
         <div class="pane">
-          <div class="complete">
+          <div class="complete card">
+            <span class="badge" aria-hidden="true">✓</span>
             <h2>Lesson complete</h2>
             <p>You’ve finished “${escapeHtml(lesson.title)}.” That’s lesson ${i} of ${lessons.length}. You can go back home, or take this lesson again any time.</p>
           </div>
@@ -1887,11 +3141,14 @@
       else if (state.view === "quiz") root.innerHTML = renderQuiz();
       else if (state.view === "complete") root.innerHTML = renderComplete();
       else if (state.view === "wallet") root.innerHTML = renderWalletHome();
+      else if (state.view === "summary") root.innerHTML = renderSummary();
       else if (state.view === "trade") root.innerHTML = renderTrade();
       else if (state.view === "confirm") root.innerHTML = renderConfirm();
       else if (state.view === "startover") root.innerHTML = renderStartOver();
       else root.innerHTML = renderHome();
 
+      const shellEl = root.closest(".shell");
+      if (shellEl) shellEl.classList.toggle("shell-wide", state.view === "summary");
       root.querySelectorAll("[data-open]").forEach((el) => {
         el.addEventListener("click", () => openLessonFromHome(el.getAttribute("data-open")));
       });
@@ -1923,6 +3180,25 @@
         render();
       });
 
+      root.querySelectorAll("[data-tab]").forEach((el) => {
+        el.addEventListener("click", () => {
+          const tab = el.getAttribute("data-tab");
+          if (state.view === tab) return;
+          state.view = tab;
+          persistAll();
+          render();
+          const again = document.querySelector('[data-tab="' + tab + '"]');
+          if (again) again.focus();
+        });
+      });
+      root.querySelectorAll("[data-range]").forEach((el) => {
+        el.addEventListener("click", () => {
+          summaryRange = el.getAttribute("data-range");
+          render();
+          const again = document.querySelector('[data-range="' + summaryRange + '"]');
+          if (again) again.focus();
+        });
+      });
       const openWalletBtn = root.querySelector("[data-open-wallet]");
       if (openWalletBtn) openWalletBtn.addEventListener("click", openWallet);
       const openBuy = root.querySelector("[data-open-buy]");
@@ -1931,8 +3207,9 @@
       if (openSell) openSell.addEventListener("click", () => openTrade("sell"));
       const undoBtn = root.querySelector("[data-undo]");
       if (undoBtn) undoBtn.addEventListener("click", () => {
-        applyUndo();
+        const undone = applyUndo();
         persistWallet();
+        if (undone.ok) recordSnapshot(true);
         render();
       });
       const startOverBtn = root.querySelector("[data-startover]");
@@ -1944,6 +3221,7 @@
       const yesStart = root.querySelector("[data-yes-startover]");
       if (yesStart) yesStart.addEventListener("click", () => {
         applyStartOver();
+        resetHistory();
         state.view = "wallet";
         persistWallet();
         render();
@@ -2019,6 +3297,8 @@
       }
     }
 
+    function resetLessonProgressAll() { for (const k of Object.keys(lessonProgress)) delete lessonProgress[k]; }
+
     window.__cfg = {
       reset() {
         localStorage.removeItem(STORAGE_KEY);
@@ -2029,6 +3309,10 @@
         tradeDraft = null;
         tradeError = "";
         for (const k of Object.keys(lessonProgress)) delete lessonProgress[k];
+        perfHistory = [];
+        fakeNow = null;
+        summaryRange = "1W";
+        localStorage.removeItem(HIST_KEY);
         render();
       },
       state() { return state; }
@@ -2066,6 +3350,7 @@
         prices.error = null;
         if (p.btc != null) prices.btc = { value: p.btc, fetchedAt: at, source: "test" };
         if (p.eth != null) prices.eth = { value: p.eth, fetchedAt: at, source: "test" };
+        onPricesRefreshed();
         if (isWalletView(state.view)) render();
       },
       failFeeds(which) {
@@ -2093,7 +3378,7 @@
         const amountCents = Math.round(Number(dollars) * 100);
         const price = livePrice(coin) || (prices[coin] && prices[coin].value);
         const result = applyBuy(coin, amountCents, price);
-        if (result.ok) persistWallet();
+        if (result.ok) { persistWallet(); recordSnapshot(true); }
         if (isWalletView(state.view)) render();
         return result;
       },
@@ -2101,25 +3386,26 @@
         const amountCents = Math.round(Number(dollars) * 100);
         const price = livePrice(coin) || (prices[coin] && prices[coin].value);
         const result = applySell(coin, amountCents, price, false);
-        if (result.ok) persistWallet();
+        if (result.ok) { persistWallet(); recordSnapshot(true); }
         if (isWalletView(state.view)) render();
         return result;
       },
       sellAll(coin) {
         const price = livePrice(coin) || (prices[coin] && prices[coin].value);
         const result = applySell(coin, 0, price, true);
-        if (result.ok) persistWallet();
+        if (result.ok) { persistWallet(); recordSnapshot(true); }
         if (isWalletView(state.view)) render();
         return result;
       },
       undo() {
         const result = applyUndo();
-        if (result.ok) persistWallet();
+        if (result.ok) { persistWallet(); recordSnapshot(true); }
         if (isWalletView(state.view)) render();
         return result;
       },
       startOver() {
         const result = applyStartOver();
+        resetHistory();
         persistWallet();
         if (isWalletView(state.view)) render();
         return result;
@@ -2129,8 +3415,54 @@
         wallet.coins[coin].costCents = costCents;
         persistWallet();
       },
+      getHistory() { return perfHistory.map((h) => Object.assign({}, h)); },
+      addSnapshot(tMs, overrides) { return addSnapshotAt(tMs, overrides); },
+      seedHistory(days, pattern) { const n = seedHistory(days, pattern); if (isWalletView(state.view)) render(); return n; },
+      clearHistory() { perfHistory = []; saveHistory(); if (isWalletView(state.view)) render(); },
+      setNow(ms) { fakeNow = ms == null ? null : ms; if (isWalletView(state.view)) render(); },
+      summary() { return summaryData(); },
+      formatPrice(v) { return formatPrice(v); },
+      listLessons() {
+        return lessons.map((l, i) => ({ number: i + 1, id: l.id, title: l.title, screens: l.screens.length, quiz: l.quiz.length }));
+      },
+      lessonsData() { return JSON.parse(JSON.stringify(LESSONS)); },
+      // Writes a 3-lesson-era (v1-shaped) crypto-grandma-v1 state, with a funded wallet and history,
+      // so a page reload can show the migration. variant "done3" = lessons 1-3 done; "mid" = 1-2 done, lesson 3 open on screen 4; "midhome" = same progress but sitting on the home list.
+      seedV1Progress(variant) {
+        const v = variant === "mid" || variant === "midhome" ? variant : "done3";
+        const all = { "what-is-bitcoin": { 0: 2, 1: 1, 2: 1 }, "spotting-scams": { 0: 1, 1: 1, 2: 1 }, "buying-and-selling": { 0: 0, 1: 1, 2: 1 } };
+        state = defaultState();
+        resetLessonProgressAll();
+        state.started = { "what-is-bitcoin": true, "spotting-scams": true, "buying-and-selling": true };
+        if (v === "done3") {
+          state.done = { "what-is-bitcoin": true, "spotting-scams": true, "buying-and-selling": true };
+          state.answers = all;
+          state.progress = {
+            "what-is-bitcoin": { screen: 6, quizIndex: 2, selected: 1, revealed: true, view: "quiz" },
+            "spotting-scams": { screen: 7, quizIndex: 2, selected: 1, revealed: true, view: "quiz" },
+            "buying-and-selling": { screen: 6, quizIndex: 2, selected: 1, revealed: true, view: "quiz" }
+          };
+        } else {
+          state.done = { "what-is-bitcoin": true, "spotting-scams": true };
+          state.answers = { "what-is-bitcoin": all["what-is-bitcoin"], "spotting-scams": all["spotting-scams"], "buying-and-selling": {} };
+          state.progress = { "buying-and-selling": { screen: 3, quizIndex: 0, selected: null, revealed: false, view: "lesson" } };
+          if (v === "mid") { state.view = "lesson"; state.lessonId = "buying-and-selling"; state.screen = 3; }
+        }
+        Object.assign(lessonProgress, state.progress);
+        wallet = defaultWallet(); wallet.history = [];
+        prices = defaultPrices(); prices.pinned = true;
+        acceptPrices({ btc: 60000, eth: 2000, source: "test" }, Date.now());
+        applyBuy("btc", 10000, 60000);
+        applyBuy("eth", 10000, 2000);
+        fakeNow = null; perfHistory = [];
+        seedHistory(5);
+        saveState();
+        saveHistory();
+        render();
+        return { variant: v, cashCents: wallet.cashCents, btcUnits: wallet.coins.btc.units, ethUnits: wallet.coins.eth.units, done: Object.keys(state.done), raw: localStorage.getItem(STORAGE_KEY) };
+      },
       runCases() {
-        const results = runCases();
+        const results = runCases().concat(runDashboardCases(), runLessonCases());
         const lines = results.map((r) => (r.ok ? "PASS" : "FAIL") + " " + r.n + " " + r.detail);
         const all = results.every((r) => r.ok);
         const text = lines.join("\n") + "\n" + (all ? "ALL PASS" : "SOME FAILED");
